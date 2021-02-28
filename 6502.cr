@@ -179,7 +179,8 @@ struct Memory
     #       $FFFC-$FFFD : power reset handler
     #       $FFFE-$FFFF : BRK/interrupt request handler
     #   Any other locations are free to use by the user
-    getter data = Array(UInt8).new(64 * 1024, 0)
+    # getter data = StaticArray(UInt8, 65536).new(0)
+    getter data = Array(UInt8).new(65536, 0)
 
     def [](index : UInt16)
         self.data[index]
