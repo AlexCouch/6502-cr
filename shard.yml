@@ -1,0 +1,19 @@
+name: 6502-cr
+version: 0.1.0
+
+authors:
+  - Alex Couch <alcouch65@gmail.com>
+
+description: |
+  A complete implementation of the 6502 microprocessor
+
+# dependencies:
+#   pg:
+#     github: will/crystal-pg
+#     version: "~> 0.5"
+
+# development_dependencies:
+#   webmock:
+#     github: manastech/webmock.cr
+
+# license: MIT
