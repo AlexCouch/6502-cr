@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Crystal Docs 0.36.0">
+<meta name="crystal_docs.project_version" content="master-dev">
+<meta name="crystal_docs.project_name" content="6502-cr">
+
+
+
+<link href="css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/doc.js"></script>
+
+  <meta name="repository-name" content="6502-cr">
+  <title>Memory - 6502-cr master-dev</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="index.html">
+          6502-cr
+        </a>
+      </h1>
+
+      <span class="project-version">
+        master-dev
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class=" " data-id="6502-cr/CPU" data-name="cpu">
+      <a href="CPU.html">CPU</a>
+      
+    </li>
+  
+  <li class=" " data-id="6502-cr/Instructions" data-name="instructions">
+      <a href="Instructions.html">Instructions</a>
+      
+    </li>
+  
+  <li class=" current" data-id="6502-cr/Memory" data-name="memory">
+      <a href="Memory.html">Memory</a>
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">struct</span> Memory
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="Memory.html">Memory</a></li><li class="superclass">Struct</li><li class="superclass">Value</li><li class="superclass">Object</li></ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+
+
+
+
+
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new-class-method" class="signature"><strong>.new</strong></a>
+        
+      </li>
+    
+  </ul>
+
+
+
+
+
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#[](index:UInt16)-instance-method" class="signature"><strong>#[]</strong>(index : UInt16)</a>
+        
+          <div class="summary"><p>Read at a 16-bit address</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#[](index:UInt8)-instance-method" class="signature"><strong>#[]</strong>(index : UInt8)</a>
+        
+          <div class="summary"><p>Read at an 8-bit address</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#[]=(index:Int32,value:UInt8)-instance-method" class="signature"><strong>#[]=</strong>(index : Int32, value : UInt8)</a>
+        
+          <div class="summary"><p>Use a 32-bit address to store an 8-bit value</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#[]=(index:UInt16,value:UInt8)-instance-method" class="signature"><strong>#[]=</strong>(index : UInt16, value : UInt8)</a>
+        
+          <div class="summary"><p>Use a 16-bit address to store an 8-bit value</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#[]=(index:UInt8,value:UInt8)-instance-method" class="signature"><strong>#[]=</strong>(index : UInt8, value : UInt8)</a>
+        
+          <div class="summary"><p>Use an 8-bit address to store an 8-bit value</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#data:Array(UInt8)-instance-method" class="signature"><strong>#data</strong> : Array(UInt8)</a>
+        
+          <div class="summary"><p>The actual stored data   The first page ($0000 - $00FF) is called the zero page   The second page ($0100 - $01FF) is reserved for the system stack and cannot be relocated   The last 6 bytes are reserved for the following       $FFFA-$FFFB : non-maskable interrupt handler       $FFFC-$FFFD : power reset handler       $FFFE-$FFFF : BRK/interrupt request handler   Any other locations are free to use by the user getter data = StaticArray(UInt8, 65536).new(0)</p></div>
+        
+      </li>
+    
+  </ul>
+
+
+
+
+
+<div class="methods-inherited">
+  
+    
+
+
+    
+
+
+    
+
+
+  
+    
+
+
+    
+
+
+    
+
+
+  
+    
+
+
+    
+
+
+    
+
+
+  
+</div>
+
+
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>
+
+        <a class="method-permalink" href="#new-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+
+
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="[](index:UInt16)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]</strong>(index : UInt16)
+
+        <a class="method-permalink" href="#[](index:UInt16)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Read at a 16-bit address</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="[](index:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]</strong>(index : UInt8)
+
+        <a class="method-permalink" href="#[](index:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Read at an 8-bit address</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="[]=(index:Int32,value:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]=</strong>(index : Int32, value : UInt8)
+
+        <a class="method-permalink" href="#[]=(index:Int32,value:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Use a 32-bit address to store an 8-bit value</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="[]=(index:UInt16,value:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]=</strong>(index : UInt16, value : UInt8)
+
+        <a class="method-permalink" href="#[]=(index:UInt16,value:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Use a 16-bit address to store an 8-bit value</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="[]=(index:UInt8,value:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]=</strong>(index : UInt8, value : UInt8)
+
+        <a class="method-permalink" href="#[]=(index:UInt8,value:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Use an 8-bit address to store an 8-bit value</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="data:Array(UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>data</strong> : Array(UInt8)
+
+        <a class="method-permalink" href="#data:Array(UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The actual stored data
+  The first page ($0000 - $00FF) is called the zero page
+  The second page ($0100 - $01FF) is reserved for the system stack and cannot be relocated
+  The last 6 bytes are reserved for the following</p>
+
+<pre><code class="language-crystal">  $FFFA-$FFFB : non-maskable interrupt handler
+  $FFFC-$FFFD : power reset handler
+  $FFFE-$FFFF : BRK/interrupt request handler</code></pre>
+
+<p>Any other locations are free to use by the user
+getter data = StaticArray(UInt8, 65536).new(0)</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+
+</div>
+
+</body>
+</html>

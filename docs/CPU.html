@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Crystal Docs 0.36.0">
+<meta name="crystal_docs.project_version" content="master-dev">
+<meta name="crystal_docs.project_name" content="6502-cr">
+
+
+
+<link href="css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/doc.js"></script>
+
+  <meta name="repository-name" content="6502-cr">
+  <title>CPU - 6502-cr master-dev</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="index.html">
+          6502-cr
+        </a>
+      </h1>
+
+      <span class="project-version">
+        master-dev
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class=" current" data-id="6502-cr/CPU" data-name="cpu">
+      <a href="CPU.html">CPU</a>
+      
+    </li>
+  
+  <li class=" " data-id="6502-cr/Instructions" data-name="instructions">
+      <a href="Instructions.html">Instructions</a>
+      
+    </li>
+  
+  <li class=" " data-id="6502-cr/Memory" data-name="memory">
+      <a href="Memory.html">Memory</a>
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">struct</span> CPU
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="CPU.html">CPU</a></li><li class="superclass">Struct</li><li class="superclass">Value</li><li class="superclass">Object</li></ul>
+
+
+
+
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>The core CPU that will have the methods and IV's necessary to emulate the 6502 microprocessor</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+
+
+
+
+
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new-class-method" class="signature"><strong>.new</strong></a>
+        
+      </li>
+    
+  </ul>
+
+
+
+
+
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#advance_next_ins-instance-method" class="signature"><strong>#advance_next_ins</strong></a>
+        
+          <div class="summary"><p>This is the same as next_ins except it decrements the cycles_remaining.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#cycles_remaining:Int32-instance-method" class="signature"><strong>#cycles_remaining</strong> : Int32</a>
+        
+          <div class="summary"><p>The cycles remaining for the execution of an instruction.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#cycles_remaining=(cycles_remaining)-instance-method" class="signature"><strong>#cycles_remaining=</strong>(cycles_remaining)</a>
+        
+          <div class="summary"><p>The cycles remaining for the execution of an instruction.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#execute-instance-method" class="signature"><strong>#execute</strong></a>
+        
+          <div class="summary"><p>This will execute the loaded program by taking the first byte and  decoding it as an instruction, and continuing to decode instructions until the next byte read is 0.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#load_program(program:Array(UInt8))-instance-method" class="signature"><strong>#load_program</strong>(program : Array(UInt8))</a>
+        
+          <div class="summary"><p>Loads a program into memory at address 0x0200</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#memory:Memory-instance-method" class="signature"><strong>#memory</strong> : Memory</a>
+        
+          <div class="summary"><p>The memory of the cpu</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#next_ins-instance-method" class="signature"><strong>#next_ins</strong></a>
+        
+          <div class="summary"><p>Get the next instruction in memory without affecting the cycles remaining.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#processor_status:BitArray-instance-method" class="signature"><strong>#processor_status</strong> : BitArray</a>
+        
+          <div class="summary"><p>The processor status holds bits specific to certain statuses of the processor</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#program_counter:UInt16-instance-method" class="signature"><strong>#program_counter</strong> : UInt16</a>
+        
+          <div class="summary"><p>The program counter, which is used to indicate the next instruction to load from the program in memory.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#program_counter=(program_counter:UInt16)-instance-method" class="signature"><strong>#program_counter=</strong>(program_counter : UInt16)</a>
+        
+          <div class="summary"><p>The program counter, which is used to indicate the next instruction to load from the program in memory.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_a:UInt8-instance-method" class="signature"><strong>#reg_a</strong> : UInt8</a>
+        
+          <div class="summary"><p>Accumulator register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_a=(reg_a:UInt8)-instance-method" class="signature"><strong>#reg_a=</strong>(reg_a : UInt8)</a>
+        
+          <div class="summary"><p>Accumulator register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_x:UInt8-instance-method" class="signature"><strong>#reg_x</strong> : UInt8</a>
+        
+          <div class="summary"><p>X register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_x=(reg_x:UInt8)-instance-method" class="signature"><strong>#reg_x=</strong>(reg_x : UInt8)</a>
+        
+          <div class="summary"><p>X register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_y:UInt8-instance-method" class="signature"><strong>#reg_y</strong> : UInt8</a>
+        
+          <div class="summary"><p>Y register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reg_y=(reg_y:UInt8)-instance-method" class="signature"><strong>#reg_y=</strong>(reg_y : UInt8)</a>
+        
+          <div class="summary"><p>Y register</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#stack_pointer:UInt8-instance-method" class="signature"><strong>#stack_pointer</strong> : UInt8</a>
+        
+          <div class="summary"><p>The pointer to the next place on the stack to be pushed.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#stack_pointer=(stack_pointer:UInt8)-instance-method" class="signature"><strong>#stack_pointer=</strong>(stack_pointer : UInt8)</a>
+        
+          <div class="summary"><p>The pointer to the next place on the stack to be pushed.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#stack_pop-instance-method" class="signature"><strong>#stack_pop</strong></a>
+        
+          <div class="summary"><p>Pop a byte off the stack</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#stack_push(value:UInt8)-instance-method" class="signature"><strong>#stack_push</strong>(value : UInt8)</a>
+        
+          <div class="summary"><p>Push a byte onto the stack portion of memory.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#stack_push(value:UInt16)-instance-method" class="signature"><strong>#stack_push</strong>(value : UInt16)</a>
+        
+          <div class="summary"><p>Push a word onto the stack.</p></div>
+        
+      </li>
+    
+  </ul>
+
+
+
+
+
+<div class="methods-inherited">
+  
+    
+
+
+    
+
+
+    
+
+
+  
+    
+
+
+    
+
+
+    
+
+
+  
+    
+
+
+    
+
+
+    
+
+
+  
+</div>
+
+
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>
+
+        <a class="method-permalink" href="#new-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+
+
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="advance_next_ins-instance-method">
+      <div class="signature">
+        
+        def <strong>advance_next_ins</strong>
+
+        <a class="method-permalink" href="#advance_next_ins-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>This is the same as next_ins except it decrements the cycles_remaining.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="cycles_remaining:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>cycles_remaining</strong> : Int32
+
+        <a class="method-permalink" href="#cycles_remaining:Int32-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The cycles remaining for the execution of an instruction.
+Some instructions take more cycles than others, so after the first byte is fetched from memory using next_ins,
+then there is 1 less cycle remaining for that instruction.
+Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="cycles_remaining=(cycles_remaining)-instance-method">
+      <div class="signature">
+        
+        def <strong>cycles_remaining=</strong>(cycles_remaining)
+
+        <a class="method-permalink" href="#cycles_remaining=(cycles_remaining)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The cycles remaining for the execution of an instruction.
+Some instructions take more cycles than others, so after the first byte is fetched from memory using next_ins,
+then there is 1 less cycle remaining for that instruction.
+Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="execute-instance-method">
+      <div class="signature">
+        
+        def <strong>execute</strong>
+
+        <a class="method-permalink" href="#execute-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>This will execute the loaded program by taking the first byte and 
+decoding it as an instruction, and continuing to decode instructions until the next byte read is 0. 
+If it fails to decode it, it will print an error.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="load_program(program:Array(UInt8))-instance-method">
+      <div class="signature">
+        
+        def <strong>load_program</strong>(program : Array(UInt8))
+
+        <a class="method-permalink" href="#load_program(program:Array(UInt8))-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Loads a program into memory at address 0x0200</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="memory:Memory-instance-method">
+      <div class="signature">
+        
+        def <strong>memory</strong> : <a href="Memory.html">Memory</a>
+
+        <a class="method-permalink" href="#memory:Memory-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The memory of the cpu</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="next_ins-instance-method">
+      <div class="signature">
+        
+        def <strong>next_ins</strong>
+
+        <a class="method-permalink" href="#next_ins-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Get the next instruction in memory without affecting the cycles remaining. This is mostly used for getting the first byte in an instruction, which would count as the first cycle of an instruction. This will increment the program counter</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="processor_status:BitArray-instance-method">
+      <div class="signature">
+        
+        def <strong>processor_status</strong> : BitArray
+
+        <a class="method-permalink" href="#processor_status:BitArray-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The processor status holds bits specific to certain statuses of the processor</p>
+
+<p>The bits are as follows:</p>
+
+<pre><code class="language-crystal">  <span class="n">0</span> : <span class="t">Carry</span> flag
+  <span class="n">1</span> : <span class="t">Zero</span> flag
+  <span class="n">2</span> : <span class="t">Interrupt</span> disable
+  <span class="n">3</span> : <span class="t">Decimal</span> mode
+  <span class="n">4</span> : <span class="t">Break</span> command
+  <span class="n">5</span> : <span class="t">Overflow</span> flag
+  <span class="n">6</span> : <span class="t">Negative</span> flag</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="program_counter:UInt16-instance-method">
+      <div class="signature">
+        
+        def <strong>program_counter</strong> : UInt16
+
+        <a class="method-permalink" href="#program_counter:UInt16-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The program counter, which is used to indicate the next instruction to load from the program in memory.
+This can be changed by using jump instructions, calling a subroutine, or exiting a subrouting or by an interrupt</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="program_counter=(program_counter:UInt16)-instance-method">
+      <div class="signature">
+        
+        def <strong>program_counter=</strong>(program_counter : UInt16)
+
+        <a class="method-permalink" href="#program_counter=(program_counter:UInt16)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The program counter, which is used to indicate the next instruction to load from the program in memory.
+This can be changed by using jump instructions, calling a subroutine, or exiting a subrouting or by an interrupt</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_a:UInt8-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_a</strong> : UInt8
+
+        <a class="method-permalink" href="#reg_a:UInt8-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Accumulator register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_a=(reg_a:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_a=</strong>(reg_a : UInt8)
+
+        <a class="method-permalink" href="#reg_a=(reg_a:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Accumulator register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_x:UInt8-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_x</strong> : UInt8
+
+        <a class="method-permalink" href="#reg_x:UInt8-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>X register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_x=(reg_x:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_x=</strong>(reg_x : UInt8)
+
+        <a class="method-permalink" href="#reg_x=(reg_x:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>X register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_y:UInt8-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_y</strong> : UInt8
+
+        <a class="method-permalink" href="#reg_y:UInt8-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Y register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reg_y=(reg_y:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>reg_y=</strong>(reg_y : UInt8)
+
+        <a class="method-permalink" href="#reg_y=(reg_y:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Y register</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="stack_pointer:UInt8-instance-method">
+      <div class="signature">
+        
+        def <strong>stack_pointer</strong> : UInt8
+
+        <a class="method-permalink" href="#stack_pointer:UInt8-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The pointer to the next place on the stack to be pushed. This starts at the top and moves downwards, starting at 0x01FF and ending at 0x0100.
+This is an 8-bit register which holds the low 8 bits of the next location on the stack to be pushed to
+When the stack is pushed, this decrements, when the stack is popped, it is incremented
+This register does not handle overflows so overflows will have to be handled manually</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="stack_pointer=(stack_pointer:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>stack_pointer=</strong>(stack_pointer : UInt8)
+
+        <a class="method-permalink" href="#stack_pointer=(stack_pointer:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The pointer to the next place on the stack to be pushed. This starts at the top and moves downwards, starting at 0x01FF and ending at 0x0100.
+This is an 8-bit register which holds the low 8 bits of the next location on the stack to be pushed to
+When the stack is pushed, this decrements, when the stack is popped, it is incremented
+This register does not handle overflows so overflows will have to be handled manually</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="stack_pop-instance-method">
+      <div class="signature">
+        
+        def <strong>stack_pop</strong>
+
+        <a class="method-permalink" href="#stack_pop-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Pop a byte off the stack</p>
+
+<p>This will increment the stack pointer and decrement the cycles remaining
+This will take up one cycle to complete</p>
+
+<p>This returns the value popped from the stack at stack_pointer + 1 </p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="stack_push(value:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>stack_push</strong>(value : UInt8)
+
+        <a class="method-permalink" href="#stack_push(value:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Push a byte onto the stack portion of memory. See Memory::data for more info on where the stack is in memory.
+This counts as a cycle so when using this, make sure you have enough cycles set
+Todo: Add assertion for cycles_remaining</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="stack_push(value:UInt16)-instance-method">
+      <div class="signature">
+        
+        def <strong>stack_push</strong>(value : UInt16)
+
+        <a class="method-permalink" href="#stack_push(value:UInt16)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Push a word onto the stack. 
+Because 6502 is in little endian, it will take the low byte then the high byte in that order on the stack</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+
+</div>
+
+</body>
+</html>
