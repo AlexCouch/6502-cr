@@ -92,18 +92,66 @@ struct CPU
         until next_ins == 0
             case Instructions.new(next_ins)
             when Instructions::LDX_IMM
-                
                 self.cycles_remaining = 1
                 value = advance_next_ins()
                 self.reg_x = value
+            when Instructions::LDX_ABS
+                self.cycles_remaining = 3
+                lower = (advance_next_ins() << 8).to_u16
+                higher = advance_next_ins()
+                address = lower | higher
+                self.reg_x = self.memory[address]
+                self.cycles_remaining -= 1
+            when Instructions::LDX_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                self.reg_x = self.memory[addr]
+                self.cycles_remaining -= 1
+            when Instructions::STX_ZERO
+                self.cycles_remaining = 2
+                value = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | value
+                self.memory[addr] = self.reg_x
+                puts "Storing X in address #{addr}"
+                self.cycles_remaining -= 1
+            when Instructions::STX_ABS
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adl << 8).to_u16 | adh
+                self.memory[addr] = self.reg_x
+                self.cycles_remaining -= 1
             when Instructions::LDY_IMM
-                
                 self.cycles_remaining = 1
                 value = advance_next_ins()
                 self.reg_y = value
-
+            when Instructions::LDY_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                self.reg_y = self.memory[addr]
+                self.cycles_remaining -= 1
+            when Instructions::LDY_ABS
+                self.cycles_remaining = 3
+                lower = (advance_next_ins() << 8).to_u16
+                higher = advance_next_ins()
+                address = lower | higher
+                self.reg_y = self.memory[address]
+            when Instructions::STY_ZERO
+                self.cycles_remaining = 2
+                value = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | value
+                self.memory[addr] = self.reg_y
+                self.cycles_remaining -= 1
+            when Instructions::STY_ABS
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adl << 8).to_u16 | adh
+                self.memory[addr] = self.reg_y
+                self.cycles_remaining -= 1
             when Instructions::JSR
-                
                 self.cycles_remaining = 6
                 lower_byte = advance_next_ins()
                 higher_byte = (advance_next_ins().to_u16 << 8).to_u16
@@ -112,7 +160,6 @@ struct CPU
                 self.program_counter = jump_target - 1
                 self.cycles_remaining -= 2
             when Instructions::RTS
-                
                 self.cycles_remaining = 5
                 lower_byte = (self.stack_pop.to_u16).to_u16
                 higher_byte = (self.stack_pop.to_u16 << 8).to_u16
@@ -120,6 +167,56 @@ struct CPU
                 self.cycles_remaining -= 1
                 self.program_counter = jump_target + 1
                 self.cycles_remaining -= 2  #We decrement by two because we decrementing the jump target by 1 and that is two cycles
+            when Instructions::LDA_IMM
+                self.cycles_remaining = 1
+                value = advance_next_ins()
+                self.reg_a = value
+            when Instructions::LDA_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                self.reg_a = self.memory[addr]
+                self.cycles_remaining -= 1
+            when Instructions::LDA_ABS
+                self.cycles_remaining = 3
+                lower = (advance_next_ins() << 8).to_u16
+                higher = advance_next_ins()
+                address = lower | higher
+                self.reg_a = self.memory[address]
+            when Instructions::STA_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_ABS
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adl << 8).to_u16 | adh
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::ADC_IMM
+                self.cycles_remaining = 2
+                value = advance_next_ins()
+                #Check for overflow, if so, set the carry bit to 1
+                if 255 - self.reg_a < value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &+= value
+                self.cycles_remaining -= 1
+            when Instructions::ADC_ABS
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adl << 8).to_u16 | adh
+                value = self.memory[addr]
+                #Check for overflow, if so, set the carry bit to 1
+                if 255 - self.reg_a < value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &+= value
+                self.cycles_remaining -= 1
             else
                 puts "Failed to decode instruction: #{next_ins} @ #{self.program_counter}"
                 return
@@ -131,7 +228,7 @@ struct CPU
     #Loads a program into memory at address 0x0200
     def load_program(program : Array(UInt8))
         program.each_with_index do |b, index|
-            self.memory[index] = b
+            self.memory[0x0200 + index] = b
         end
     end
 end
@@ -175,7 +272,7 @@ struct Memory
 end
 
 enum Instructions : UInt8
-    #This instruction will load a byte into the X register.
+    #This instruction will load an immediate byte into the X register.
     #
     #This instruction is 2 cycles and 2 bytes and operate as follows:
     #```
@@ -183,6 +280,67 @@ enum Instructions : UInt8
     #Cycle 2: Read byte and load into X
     #```
     LDX_IMM = 0xA2
+    #This instruction will load a byte into the X register given a higher byte of a zero page address
+    #
+    #This instruction is 3 cycles and 2 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read higher byte from program
+    #Cycle 3    Load from zero page address into X
+    #```
+    LDX_ZERO = 0xA5
+    #This instruction will load a byte from a given 16-bit memory address into the X register.
+    #
+    #This instruction is 4 cycles and 3 bytes and operate as follows:
+    #```
+    #Cycle 1: Fetch Opcode
+    #Cycle 2: Read ADL
+    #Cycle 3: Read ADH
+    #Cycle 4: Load 8-bit data of address 0x{ADL}{ADH} into X
+    #```
+    LDX_ABS = 0xAE
+    #This instruction will store the value in register X in an address in the zero page
+    #
+    #This takes two bytes and three cycles
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH
+    #Cycle 3    Store contents of X at 0x00{ADH} where ADH is the address within the zero page, and 0x00 is the lower byte of the address
+    #```
+    STX_ZERO = 0x86
+    #This instruction will store the value in register X in an absolute address
+    #
+    #This takes three bytes and 4 cycles to complete
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Read ADH
+    #Cycle 4    Store contents of X at 0x{ADL}{ADH}
+    #```
+    STX_ABS = 0x8E
+    #This instruction will store the value in register Y in an address in the zero page
+    #
+    #This takes two bytes and three cycles
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH
+    #Cycle 3    Store contents of Y at 0x00{ADH} where ADH is the address within the zero page, and 0x00 is the lower byte of the address
+    #```
+    STY_ZERO = 0x84
+    #This instruction will store the value in register Y in an absolute address
+    #
+    #This takes three bytes and 4 cycles to complete
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Read ADH
+    #Cycle 4    Store contents of Y at 0x{ADL}{ADH}
+    #```
+    STY_ABS = 0x8C
     #This instruction will load a byte into the Y register.
     #
     #This instruction is 2 cycles and 2 bytes and operate as follows:
@@ -191,6 +349,93 @@ enum Instructions : UInt8
     #Cycle 2: Read byte and load into Y
     #```
     LDY_IMM = 0xA0
+    #This instruction will load a byte into the Y register given a higher byte of a zero page address
+    #
+    #This instruction is 3 cycles and 2 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read higher byte from program
+    #Cycle 3    Load from zero page address into Y
+    #```
+    LDY_ZERO = 0xA4
+    #This instruction will load a byte from a given 16-bit memory address into the Y register.
+    #
+    #This instruction is 4 cycles and 3 bytes and operate as follows:
+    #```
+    #Cycle 1: Fetch Opcode
+    #Cycle 2: Read ADL
+    #Cycle 3: Read ADH
+    #Cycle 4: Load 8-bit data of address 0x{ADL}{ADH} into Y
+    #```
+    LDY_ABS = 0xAC
+    #This instruction will load a byte into the A register.
+    #
+    #This instruction is 2 cycles and 2 bytes and operate as follows:
+    #```
+    #Cycle 1: Fetch Opcode
+    #Cycle 2: Read byte and load into A
+    #```
+    LDA_IMM = 0xA9
+    #This instruction will load a byte into the A register given a higher byte of a zero page address
+    #
+    #This instruction is 3 cycles and 2 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read higher byte from program
+    #Cycle 3    Load from zero page address into accumulator
+    #```
+    LDA_ZERO = 0xA5
+    #This instruction will load a byte from an absolute address into the accumulator
+    #
+    #This instruction is 4 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Load byte from given address into accumulator
+    #```
+    LDA_ABS = 0xAD
+    #This instruction will store the value in the accumulator (register A) in an address in the zero page
+    #
+    #This takes two bytes and three cycles
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH
+    #Cycle 3    Store contents of A at 0x00{ADH} where ADH is the address within the zero page, and 0x00 is the lower byte of the address
+    #```
+    STA_ZERO = 0x85
+    #This instruction will store the contents of the accumulator into an absolute address
+    #
+    #This instruction is 4 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Store contents of accumulator into given address
+    #```
+    STA_ABS = 0x8D
+    #This instruction will add an immediate value into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes two bytes and takes three cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read byte from program
+    #Cycle 3    Add read byte to A, set carry bit if necessary
+    #```
+    ADC_IMM = 0x69
+    #This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 3 bytes and takes 4 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Read ADH
+    #Cycle 4    Add contents of 0x{ADL}{ADH} to register A
+    #```
+    ADC_ABS = 0x6D
     #This will read a word from the program and push the current program counter onto the stack then setting the program counter to the acquired word.
     #
     #This instruction is 7 cycles and 3 bytes
@@ -251,13 +496,14 @@ cpu = CPU.new
 program = Array(UInt8).new(64, 0)
 program[0] = Instructions::LDY_IMM.value
 program[1] = 0x05_u8
-program[2] = Instructions::JSR.value
-program[3] = 0x21_u8
-program[4] = 0x02_u8
-program[32] = Instructions::RTS.value
+program[2] = Instructions::STY_ABS.value
+program[3] = 0x03_u8
+program[4] = 0x10_u8
+program[5] = Instructions::LDA_IMM.value
+program[6] = 0x05_u8
+program[7] = Instructions::ADC_ABS.value
+program[8] = 0x03_u8
+program[9] = 0x10_u8
 cpu.load_program(program)
 cpu.execute
-puts cpu.reg_x
-puts cpu.reg_y
-puts cpu.program_counter
-puts cpu.cycles_remaining
+puts cpu.reg_a
