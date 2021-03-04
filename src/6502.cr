@@ -197,8 +197,18 @@ struct CPU
                 self.memory[addr] = self.reg_a
                 self.cycles_remaining -= 1
             when Instructions::ADC_IMM
-                self.cycles_remaining = 2
+                self.cycles_remaining = 1
                 value = advance_next_ins()
+                #Check for overflow, if so, set the carry bit to 1
+                if 255 - self.reg_a < value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &+= value
+            when Instructions::ADC_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                value = self.memory[addr]
                 #Check for overflow, if so, set the carry bit to 1
                 if 255 - self.reg_a < value
                     self.processor_status[0] = true
@@ -216,6 +226,38 @@ struct CPU
                     self.processor_status[0] = true
                 end
                 self.reg_a &+= value
+                self.cycles_remaining -= 1
+            when Instructions::SBC_ABS
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adl << 8).to_u16 | adh
+                value = self.memory[addr]
+                #Check for underflow, if so, set the carry bit to 1
+                if self.reg_a > value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &-= value
+                self.cycles_remaining -= 1
+            when Instructions::SBC_ZERO
+                self.cycles_remaining = 2
+                adh = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adh
+                value = self.memory[addr]
+                #Check for underflow, if so, set the carry bit to 1
+                if self.reg_a > value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &-= value
+                self.cycles_remaining -= 1
+            when Instructions::SBC_IMM
+                self.cycles_remaining = 2
+                value = advance_next_ins()
+                #Check for underflow, if so, set the carry bit to 1
+                if self.reg_a > value
+                    self.processor_status[0] = true
+                end
+                self.reg_a &-= value
                 self.cycles_remaining -= 1
             else
                 puts "Failed to decode instruction: #{next_ins} @ #{self.program_counter}"
@@ -425,6 +467,16 @@ enum Instructions : UInt8
     #Cycle 3    Add read byte to A, set carry bit if necessary
     #```
     ADC_IMM = 0x69
+    #This instruction will add the contents of an address in the zero page to the accumulator.
+    #
+    #This instruction takes 3 bytes and takes 4 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 3    Read ADH
+    #Cycle 4    Add contents of 0x00{ADH} to register A
+    #```
+    ADC_ZERO = 0x65
     #This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
     #
     #This instruction takes 3 bytes and takes 4 cycles to complete.
@@ -436,6 +488,10 @@ enum Instructions : UInt8
     #Cycle 4    Add contents of 0x{ADL}{ADH} to register A
     #```
     ADC_ABS = 0x6D
+    #I'm too lazy to document these right now lol
+    SBC_IMM = 0xE9
+    SBC_ZERO = 0xE5
+    SBC_ABS = 0xED
     #This will read a word from the program and push the current program counter onto the stack then setting the program counter to the acquired word.
     #
     #This instruction is 7 cycles and 3 bytes
@@ -492,18 +548,13 @@ enum Instructions : UInt8
     RTS     = 0x60
 end
 
+program = Bytes.new(64)
+File.open("program", "rb") do |file|
+    file.each_byte.with_index do |byte, index|
+        program[index] = byte
+    end
+end
 cpu = CPU.new
-program = Array(UInt8).new(64, 0)
-program[0] = Instructions::LDY_IMM.value
-program[1] = 0x05_u8
-program[2] = Instructions::STY_ABS.value
-program[3] = 0x03_u8
-program[4] = 0x10_u8
-program[5] = Instructions::LDA_IMM.value
-program[6] = 0x05_u8
-program[7] = Instructions::ADC_ABS.value
-program[8] = 0x03_u8
-program[9] = 0x10_u8
-cpu.load_program(program)
+cpu.load_program(program.to_a)
 cpu.execute
 puts cpu.reg_a
