@@ -1,4 +1,5 @@
 require "bit_array"
+require "option_parser"
 
 #The core CPU that will have the methods and IV's necessary to emulate the 6502 microprocessor
 struct CPU
@@ -88,9 +89,9 @@ struct CPU
     #decoding it as an instruction, and continuing to decode instructions until the next byte read is 0. 
     #If it fails to decode it, it will print an error.
     def execute
-        next_ins = next_ins()
-        until next_ins == 0
-            case Instructions.new(next_ins)
+        ins = next_ins()
+        until ins == 0
+            case Instructions.new(ins)
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
                 value = advance_next_ins()
@@ -154,10 +155,13 @@ struct CPU
             when Instructions::JSR
                 self.cycles_remaining = 6
                 lower_byte = advance_next_ins()
+                # puts "lower_byte: #{lower_byte.to_s(16)}"
                 higher_byte = (advance_next_ins().to_u16 << 8).to_u16
+                # puts "higher_byte: #{higher_byte.to_s(16)}"
                 jump_target = (higher_byte | lower_byte).to_u16
-                self.stack_push(self.program_counter)
-                self.program_counter = jump_target - 1
+                # puts "jump_target: #{jump_target.to_s(16)}"
+                self.stack_push(self.program_counter - 1)
+                self.program_counter = jump_target
                 self.cycles_remaining -= 2
             when Instructions::RTS
                 self.cycles_remaining = 5
@@ -234,7 +238,7 @@ struct CPU
                 addr = (adl << 8).to_u16 | adh
                 value = self.memory[addr]
                 #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a > value
+                if self.reg_a < value
                     self.processor_status[0] = true
                 end
                 self.reg_a &-= value
@@ -245,7 +249,7 @@ struct CPU
                 addr = (0x00 << 8).to_u16 | adh
                 value = self.memory[addr]
                 #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a > value
+                if self.reg_a < value
                     self.processor_status[0] = true
                 end
                 self.reg_a &-= value
@@ -254,16 +258,16 @@ struct CPU
                 self.cycles_remaining = 2
                 value = advance_next_ins()
                 #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a > value
+                if self.reg_a < value
                     self.processor_status[0] = true
                 end
                 self.reg_a &-= value
                 self.cycles_remaining -= 1
             else
-                puts "Failed to decode instruction: #{next_ins} @ #{self.program_counter}"
+                puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"
                 return
             end
-            next_ins = next_ins()
+            ins = next_ins()
         end
     end
 
@@ -271,6 +275,46 @@ struct CPU
     def load_program(program : Array(UInt8))
         program.each_with_index do |b, index|
             self.memory[0x0200 + index] = b
+        end
+    end
+
+    def get_processor_status_string
+        String.build do |str|
+            if self.processor_status[0] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[1] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[2] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[3] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[4] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[5] == true
+                str << 1
+            else
+                str << 0
+            end
+            if self.processor_status[6] == true
+                str << 1
+            else
+                str << 0
+            end
         end
     end
 end
@@ -548,13 +592,29 @@ enum Instructions : UInt8
     RTS     = 0x60
 end
 
+file_path = ""
+parser = OptionParser.parse do |parser|
+    parser.on("-f FILE", "The file of the program to run in 6502 instructions") do |value|
+        file_path = value
+    end
+    parser.on("-h", "Print the usage") do
+        puts parser
+        exit
+    end
+end
+if file_path == ""
+    puts "Expected a program to run, got nothing. Please use -h for more info."
+end
 program = Bytes.new(64)
-File.open("program", "rb") do |file|
+File.open(file_path, "rb") do |file|
     file.each_byte.with_index do |byte, index|
         program[index] = byte
     end
 end
+require "io/hexdump"
+puts program.hexdump
 cpu = CPU.new
 cpu.load_program(program.to_a)
 cpu.execute
-puts cpu.reg_a
+puts "ar        xr        yr        pc        sp        czidbvn"
+puts "#{cpu.reg_a}        #{cpu.reg_x}      #{cpu.reg_y}        #{cpu.program_counter.to_s(16)}      #{cpu.stack_pointer}        #{cpu.get_processor_status_string}"
