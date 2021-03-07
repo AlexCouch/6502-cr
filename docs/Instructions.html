@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="generator" content="Crystal Docs 0.36.0">
-<meta name="crystal_docs.project_version" content="master">
+<meta name="crystal_docs.project_version" content="master-dev">
 <meta name="crystal_docs.project_name" content="6502-cr">
 
 
@@ -13,7 +13,7 @@
 <script type="text/javascript" src="js/doc.js"></script>
 
   <meta name="repository-name" content="6502-cr">
-  <title>Instructions - 6502-cr master</title>
+  <title>Instructions - 6502-cr master-dev</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "";
   </script>
@@ -39,7 +39,7 @@
       </h1>
 
       <span class="project-version">
-        master
+        master-dev
       </span>
     </div>
   </div>
@@ -105,13 +105,6 @@
     Defined in:
   </h2>
   
-    
-      <a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L274" target="_blank">
-        6502.cr
-      </a>
-    
-    <br/>
-  
 
 
 
@@ -169,6 +162,59 @@
 <span class="t">Cycle</span> <span class="n">2</span>: <span class="t">Read</span> <span class="t">ADL</span>
 <span class="t">Cycle</span> <span class="n">3</span>: <span class="t">Read</span> <span class="t">ADH</span>
 <span class="t">Cycle</span> <span class="n">4</span>: <span class="t">Load</span> <span class="n">8</span><span class="o">-</span>bit data <span class="k">of</span> address <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} into <span class="t">X</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="LDX_ABS_Y">
+        <strong>LDX_ABS_Y</strong> = <code><span class="n">190_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will load a byte from a given 16-bit memory address, indexed to Y</p>
+
+<p>This instruction is 4 cycles, 3 bytes and operates as follows:</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>: <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>: <span class="t">Read</span> <span class="t">ADL</span>
+<span class="t">Cycle</span> <span class="n">3</span>: <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">4</span>: <span class="t">Load</span> <span class="n">8</span><span class="o">-</span>biot data <span class="k">of</span> address <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>}<span class="o">+</span><span class="t">Y</span></code></pre>
+
+<p>X and Y registers are known as index registers. They are used to offset an address, such as indexing into an array.
+Example:</p>
+
+<pre><code class="language-crystal">arr <span class="o">=</span> [<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>, <span class="s">&#39;c&#39;</span>]
+arr[<span class="n">1</span>] <span class="c">#&#39;b&#39;</span></code></pre>
+
+<p>The indexing is easily done with the X and Y registers</p>
+
+<pre><code class="language-crystal">ldx #1
+lda $5000, X ;Assuming that the array starts at address 0x5000, we index into 0x5001 using X</code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="LDX_ZERO_Y">
+        <strong>LDX_ZERO_Y</strong> = <code><span class="n">182_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will load a byte from a given 16-bit memory address, indexed to Y</p>
+
+<p>This instruction is 4 cycles, 2 bytes and operates as follows:</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>: <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>: <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">3</span>: <span class="t">Load</span> <span class="n">8</span><span class="o">-</span>bit data <span class="k">of</span> address <span class="n">0x00</span>{<span class="t">ADH</span>}<span class="o">+</span><span class="t">Y</span></code></pre>
+
+<p>X and Y registers are known as index registers. They are used to offset an address, such as indexing into an array.
+Example:</p>
+
+<pre><code class="language-crystal">arr <span class="o">=</span> [<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>, <span class="s">&#39;c&#39;</span>]
+arr[<span class="n">1</span>] <span class="c">#&#39;b&#39;</span></code></pre>
+
+<p>The indexing is easily done with the X and Y registers</p>
+
+<pre><code class="language-crystal">ldx <span class="c">#1</span>
+lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array starts at address <span class="n">0x50</span>, we index into <span class="n">0x51</span> using <span class="t">X</span></code></pre>
       </dd>
       
     
@@ -370,12 +416,29 @@
       </dd>
       
     
+      <dt class="entry-const" id="ADC_ZERO">
+        <strong>ADC_ZERO</strong> = <code><span class="n">101_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will add the contents of an address in the zero page to the accumulator.</p>
+
+<p>This instruction takes 3 bytes and takes 4 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Add</span> contents <span class="k">of</span> <span class="n">0x00</span>{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
       <dt class="entry-const" id="ADC_ABS">
         <strong>ADC_ABS</strong> = <code><span class="n">109_u8</span></code>
       </dt>
       
       <dd class="entry-const-doc">
-        <p>This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+        <p>This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. </p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
 
 <p>This instruction takes 3 bytes and takes 4 cycles to complete.</p>
 
@@ -383,6 +446,58 @@
 <span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADL</span>
 <span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Read</span> <span class="t">ADH</span>
 <span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Add</span> contents <span class="k">of</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="SBC_IMM">
+        <strong>SBC_IMM</strong> = <code><span class="n">233_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will subtract an immediate value from the accumulator (A register) with a carry bit. </p>
+
+<p>If the operation underflows below 0, then the result with a carry bit of 1 means to interpret the results as 255 - A.</p>
+
+<p>This instruction takes two bytes and takes three cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> byte from program
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Sub</span> read byte from <span class="t">A</span>, set carry bit <span class="k">if</span> necessary</code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="SBC_ZERO">
+        <strong>SBC_ZERO</strong> = <code><span class="n">229_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will subtract the contents of an address in the zero page from the accumulator. </p>
+
+<p>If the operation underflows below 0, then the result with a carry bit of 1 means to interpret the results as 255 - A.</p>
+
+<p>This instruction takes 3 bytes and takes 4 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Subtract</span> contents <span class="k">of</span> <span class="n">0x00</span>{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="SBC_ABS">
+        <strong>SBC_ABS</strong> = <code><span class="n">237_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. </p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+
+<p>This instruction takes 3 bytes and takes 4 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADL</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Subtract</span> contents <span class="k">of</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
       </dd>
       
     
@@ -480,6 +595,11 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </li>
     
       <li class="entry-summary">
+        <a href="#adc_zero?-instance-method" class="signature"><strong>#adc_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#jsr?-instance-method" class="signature"><strong>#jsr?</strong></a>
         
       </li>
@@ -505,12 +625,22 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </li>
     
       <li class="entry-summary">
+        <a href="#ldx_abs_y?-instance-method" class="signature"><strong>#ldx_abs_y?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#ldx_imm?-instance-method" class="signature"><strong>#ldx_imm?</strong></a>
         
       </li>
     
       <li class="entry-summary">
         <a href="#ldx_zero?-instance-method" class="signature"><strong>#ldx_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#ldx_zero_y?-instance-method" class="signature"><strong>#ldx_zero_y?</strong></a>
         
       </li>
     
@@ -531,6 +661,21 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
     
       <li class="entry-summary">
         <a href="#rts?-instance-method" class="signature"><strong>#rts?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sbc_abs?-instance-method" class="signature"><strong>#sbc_abs?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sbc_imm?-instance-method" class="signature"><strong>#sbc_imm?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sbc_zero?-instance-method" class="signature"><strong>#sbc_zero?</strong></a>
         
       </li>
     
@@ -639,8 +784,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L438" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -655,7 +798,19 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L427" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="adc_zero?-instance-method">
+      <div class="signature">
+        
+        def <strong>adc_zero?</strong>
+
+        <a class="method-permalink" href="#adc_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -671,8 +826,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L480" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -686,8 +839,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L397" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -703,8 +854,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L378" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -718,8 +867,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L387" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -735,7 +882,19 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L301" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="ldx_abs_y?-instance-method">
+      <div class="signature">
+        
+        def <strong>ldx_abs_y?</strong>
+
+        <a class="method-permalink" href="#ldx_abs_y?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -751,8 +910,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L282" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -767,7 +924,19 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L291" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="ldx_zero_y?-instance-method">
+      <div class="signature">
+        
+        def <strong>ldx_zero_y?</strong>
+
+        <a class="method-permalink" href="#ldx_zero_y?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -783,8 +952,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L370" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -798,8 +965,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L351" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -815,8 +980,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L360" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -831,7 +994,47 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L492" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sbc_abs?-instance-method">
+      <div class="signature">
+        
+        def <strong>sbc_abs?</strong>
+
+        <a class="method-permalink" href="#sbc_abs?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sbc_imm?-instance-method">
+      <div class="signature">
+        
+        def <strong>sbc_imm?</strong>
+
+        <a class="method-permalink" href="#sbc_imm?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sbc_zero?-instance-method">
+      <div class="signature">
+        
+        def <strong>sbc_zero?</strong>
+
+        <a class="method-permalink" href="#sbc_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -847,8 +1050,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L417" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -862,8 +1063,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L407" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -879,8 +1078,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L322" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -894,8 +1091,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L311" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -911,8 +1106,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L343" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -926,8 +1119,6 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/AlexCouch/6502-cr/blob/17854feefa1c53b65388ece0e0df0f0b5dad2ecc/src/6502.cr#L332" target="_blank">View source</a>]
         
       </div>
     </div>
