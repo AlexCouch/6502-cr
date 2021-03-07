@@ -233,6 +233,21 @@ lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array
       </dd>
       
     
+      <dt class="entry-const" id="STX_ZERO_Y">
+        <strong>STX_ZERO_Y</strong> = <code><span class="n">134_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will store the value in register X in an address in the zero page</p>
+
+<p>This takes two bytes and three cycles</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Store</span> contents <span class="k">of</span> <span class="t">X</span> at <span class="n">0x00</span>{<span class="t">ADH</span>} where <span class="t">ADH</span> is the address within the zero page, and <span class="n">0x00</span> is the lower byte <span class="k">of</span> the address</code></pre>
+      </dd>
+      
+    
       <dt class="entry-const" id="STX_ABS">
         <strong>STX_ABS</strong> = <code><span class="n">142_u8</span></code>
       </dt>
@@ -261,6 +276,22 @@ lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array
 <pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
 <span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>
 <span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Store</span> contents <span class="k">of</span> <span class="t">Y</span> at <span class="n">0x00</span>{<span class="t">ADH</span>} where <span class="t">ADH</span> is the address within the zero page, and <span class="n">0x00</span> is the lower byte <span class="k">of</span> the address</code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="STY_ZERO_X">
+        <strong>STY_ZERO_X</strong> = <code><span class="n">148_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will store the value in register Y in an address in the zero page indexed to X</p>
+
+<p>This takes two bytes and four cycles</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">3</span>    
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Store</span> contents <span class="k">of</span> <span class="t">Y</span> at <span class="n">0x00</span>{<span class="t">ADH</span>}<span class="o">+</span><span class="t">X</span> where <span class="t">ADH</span> is the address within the zero page, and <span class="n">0x00</span> is the lower byte <span class="k">of</span> the address and <span class="t">X</span> is the contents <span class="k">of</span> <span class="t">X</span> register</code></pre>
       </dd>
       
     
@@ -306,6 +337,39 @@ lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array
 <pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
 <span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> higher byte from program
 <span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Load</span> from zero page address into <span class="t">Y</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="LDY_ZERO_X">
+        <strong>LDY_ZERO_X</strong> = <code><span class="n">180_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will load a byte into the Y register given a higher byte of a zero page address</p>
+
+<p>This instruction is 4 cycles and 2 bytes</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">ADH</span> <span class="o">=</span> <span class="t">Read</span> higher byte from program
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Addr</span> <span class="o">=</span> <span class="n">0x00</span>{<span class="t">ADH</span>} <span class="o">+</span> <span class="t">X</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Load</span> contents <span class="k">of</span> <span class="t">Addr</span> into <span class="t">Y</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="LDY_ABS_X">
+        <strong>LDY_ABS_X</strong> = <code><span class="n">188_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will load a byte from a given 16-bit memory address into the Y register.</p>
+
+<p>This instruction is 4 cycles and 3 bytes and operate as follows:</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>: <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>: <span class="t">Read</span> <span class="t">ADL</span>
+<span class="t">Cycle</span> <span class="n">3</span>: <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">4</span>: <span class="t">Increment</span> address by <span class="t">X</span>
+<span class="t">Cycle</span> <span class="n">4</span>: <span class="t">Load</span> <span class="n">8</span><span class="o">-</span>bit data <span class="k">of</span> address <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>}<span class="o">+</span><span class="t">X</span> into <span class="t">Y</span></code></pre>
       </dd>
       
     
@@ -650,12 +714,22 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </li>
     
       <li class="entry-summary">
+        <a href="#ldy_abs_x?-instance-method" class="signature"><strong>#ldy_abs_x?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#ldy_imm?-instance-method" class="signature"><strong>#ldy_imm?</strong></a>
         
       </li>
     
       <li class="entry-summary">
         <a href="#ldy_zero?-instance-method" class="signature"><strong>#ldy_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#ldy_zero_x?-instance-method" class="signature"><strong>#ldy_zero_x?</strong></a>
         
       </li>
     
@@ -700,12 +774,22 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </li>
     
       <li class="entry-summary">
+        <a href="#stx_zero_y?-instance-method" class="signature"><strong>#stx_zero_y?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#sty_abs?-instance-method" class="signature"><strong>#sty_abs?</strong></a>
         
       </li>
     
       <li class="entry-summary">
         <a href="#sty_zero?-instance-method" class="signature"><strong>#sty_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sty_zero_x?-instance-method" class="signature"><strong>#sty_zero_x?</strong></a>
         
       </li>
     
@@ -955,6 +1039,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </div>
     </div>
   
+    <div class="entry-detail" id="ldy_abs_x?-instance-method">
+      <div class="signature">
+        
+        def <strong>ldy_abs_x?</strong>
+
+        <a class="method-permalink" href="#ldy_abs_x?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
     <div class="entry-detail" id="ldy_imm?-instance-method">
       <div class="signature">
         
@@ -975,6 +1073,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>ldy_zero?</strong>
 
         <a class="method-permalink" href="#ldy_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="ldy_zero_x?-instance-method">
+      <div class="signature">
+        
+        def <strong>ldy_zero_x?</strong>
+
+        <a class="method-permalink" href="#ldy_zero_x?-instance-method">#</a>
       </div>
       
       <br/>
@@ -1095,6 +1207,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </div>
     </div>
   
+    <div class="entry-detail" id="stx_zero_y?-instance-method">
+      <div class="signature">
+        
+        def <strong>stx_zero_y?</strong>
+
+        <a class="method-permalink" href="#stx_zero_y?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
     <div class="entry-detail" id="sty_abs?-instance-method">
       <div class="signature">
         
@@ -1115,6 +1241,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>sty_zero?</strong>
 
         <a class="method-permalink" href="#sty_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sty_zero_x?-instance-method">
+      <div class="signature">
+        
+        def <strong>sty_zero_x?</strong>
+
+        <a class="method-permalink" href="#sty_zero_x?-instance-method">#</a>
       </div>
       
       <br/>
