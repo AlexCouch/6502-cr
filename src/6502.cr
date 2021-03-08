@@ -127,14 +127,14 @@ struct CPU
                 value = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | value
                 self.memory[addr] = self.reg_x
-                puts "Storing X in address #{addr}"
+                # puts "Storing X in address #{addr}"
                 self.cycles_remaining -= 1
             when Instructions::STX_ZERO_Y
                 self.cycles_remaining = 3
                 value = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | value
                 self.memory[addr+self.reg_y] = self.reg_x
-                puts "Storing X in address #{addr}"
+                # puts "Storing X in address #{addr}"
                 self.cycles_remaining -= 2
             when Instructions::STX_ABS
                 self.cycles_remaining = 3
@@ -143,13 +143,6 @@ struct CPU
                 addr = (adl << 8).to_u16 | adh
                 self.memory[addr] = self.reg_x
                 self.cycles_remaining -= 1
-            when Instructions::STX_ABS_Y
-                self.cycles_remaining = 4
-                adl = advance_next_ins()
-                adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
-                self.memory[addr+self.reg_y] = self.reg_x
-                self.cycles_remaining -= 2
             when Instructions::LDY_IMM
                 self.cycles_remaining = 1
                 value = advance_next_ins()
@@ -251,20 +244,29 @@ struct CPU
                 self.cycles_remaining = 1
                 value = advance_next_ins()
                 #Check for overflow, if so, set the carry bit to 1
-                if 255 - self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &+= value
+                result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+
             when Instructions::ADC_ZERO
                 self.cycles_remaining = 2
                 adh = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adh
                 value = self.memory[addr]
-                #Check for overflow, if so, set the carry bit to 1
-                if 255 - self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &+= value
+                result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
             when Instructions::ADC_ABS
                 self.cycles_remaining = 3
@@ -272,11 +274,14 @@ struct CPU
                 adh = advance_next_ins()
                 addr = (adl << 8).to_u16 | adh
                 value = self.memory[addr]
-                #Check for overflow, if so, set the carry bit to 1
-                if 255 - self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &+= value
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
             when Instructions::SBC_ABS
                 self.cycles_remaining = 3
@@ -284,32 +289,48 @@ struct CPU
                 adh = advance_next_ins()
                 addr = (adl << 8).to_u16 | adh
                 value = self.memory[addr]
-                #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &-= value
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
             when Instructions::SBC_ZERO
                 self.cycles_remaining = 2
                 adh = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adh
                 value = self.memory[addr]
-                #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &-= value
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
             when Instructions::SBC_IMM
                 self.cycles_remaining = 2
                 value = advance_next_ins()
                 #Check for underflow, if so, set the carry bit to 1
-                if self.reg_a < value
-                    self.processor_status[0] = true
-                end
-                self.reg_a &-= value
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
+            when Instructions::SEC
+                self.cycles_remaining = 1
+                self.processor_status[0] = true
+            when Instructions::CLC
+                self.cycles_remaining = 1
+                self.processor_status[0] = false
             else
                 puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"
                 return
@@ -759,6 +780,10 @@ enum Instructions : UInt8
     #Cycle 6    PC->PC+1
     #```
     RTS     = 0x60
+    #This instruction will set the carry flag to 1
+    SEC     = 0x38
+    #This instruction will clear the carry flag to 0
+    CLC     = 0x18
 end
 
 file_path = ""
@@ -785,5 +810,9 @@ puts program.hexdump
 cpu = CPU.new
 cpu.load_program(program.to_a)
 cpu.execute
-puts "ar        xr        yr        pc        sp        czidbvn"
-puts "#{cpu.reg_a}        #{cpu.reg_x}      #{cpu.reg_y}        #{cpu.program_counter.to_s(16)}      #{cpu.stack_pointer}        #{cpu.get_processor_status_string}"
+puts "ar        #{cpu.reg_a.to_s(16)}"
+puts "xr        #{cpu.reg_x.to_s(16)}"
+puts "yr        #{cpu.reg_y.to_s(16)}"
+puts "pc        #{cpu.program_counter.to_s(16)}"
+puts "sp        #{cpu.stack_pointer.to_s(16)}"
+puts "czidbvn   #{cpu.get_processor_status_string}"
