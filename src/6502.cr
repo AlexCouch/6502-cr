@@ -66,9 +66,9 @@ struct CPU
     #Push a word onto the stack. 
     #Because 6502 is in little endian, it will take the low byte then the high byte in that order on the stack
     def stack_push(value : UInt16)
-        lower_byte = ((value & 0xFF00) >> 8).to_u8
+        lower_byte = (value & 0x00FF).to_u8
         self.stack_push(lower_byte)
-        higher_byte = (value & 0x00FF).to_u8
+        higher_byte = ((value & 0xFF00) >> 8).to_u8
         self.stack_push(higher_byte)
     end
 
@@ -112,14 +112,14 @@ struct CPU
                 self.cycles_remaining -= 1
             when Instructions::LDX_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.reg_x = self.memory[addr]
                 self.cycles_remaining -= 1
             when Instructions::LDX_ZERO_Y
                 self.cycles_remaining = 3
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.reg_x = self.memory[addr+self.reg_y]
                 self.cycles_remaining -= 2
             when Instructions::STX_ZERO
@@ -140,7 +140,7 @@ struct CPU
                 self.cycles_remaining = 3
                 adl = advance_next_ins()
                 adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
+                addr = (adh << 8).to_u16 | adl
                 self.memory[addr] = self.reg_x
                 self.cycles_remaining -= 1
             when Instructions::LDY_IMM
@@ -149,14 +149,14 @@ struct CPU
                 self.reg_y = value
             when Instructions::LDY_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.reg_y = self.memory[addr]
                 self.cycles_remaining -= 1
             when Instructions::LDY_ZERO_X
                 self.cycles_remaining = 3
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.reg_y = self.memory[addr+self.reg_x]
                 self.cycles_remaining -= 2
             when Instructions::LDY_ABS
@@ -189,7 +189,7 @@ struct CPU
                 self.cycles_remaining = 3
                 adl = advance_next_ins()
                 adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
+                addr = (adh << 8).to_u16 | adl
                 self.memory[addr] = self.reg_y
                 self.cycles_remaining -= 1
             when Instructions::JSR
@@ -217,8 +217,8 @@ struct CPU
                 self.reg_a = value
             when Instructions::LDA_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.reg_a = self.memory[addr]
                 self.cycles_remaining -= 1
             when Instructions::LDA_ABS
@@ -229,15 +229,15 @@ struct CPU
                 self.reg_a = self.memory[address]
             when Instructions::STA_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 self.memory[addr] = self.reg_a
                 self.cycles_remaining -= 1
             when Instructions::STA_ABS
                 self.cycles_remaining = 3
                 adl = advance_next_ins()
                 adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
+                addr = (adh.to_u16 << 8).to_u16 | adl
                 self.memory[addr] = self.reg_a
                 self.cycles_remaining -= 1
             when Instructions::ADC_IMM
@@ -256,8 +256,8 @@ struct CPU
 
             when Instructions::ADC_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 value = self.memory[addr]
                 result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -272,7 +272,7 @@ struct CPU
                 self.cycles_remaining = 3
                 adl = advance_next_ins()
                 adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
+                addr = (adh << 8).to_u16 | adl
                 value = self.memory[addr]
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -283,11 +283,47 @@ struct CPU
                 self.processor_status[1] = result == 0
                 self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
+            when Instructions::ADC_INDIRECT_X
+                self.cycles_remaining = 5
+                adl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | adl
+                addr = self.memory[zaddr+self.reg_x]
+                self.cycles_remaining -= 2 #2 cycles, one to add the reg_x, and one to get the memory contents
+                value = self.memory[addr]
+                self.cycles_remaining -= 1
+                result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::ADC_Y_INDIRECT
+                self.cycles_remaining = 5
+                zadl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | zadl
+                adl = self.memory[zaddr]
+                adh = self.memory[zaddr+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                self.cycles_remaining -= 1 
+                value = self.memory[addr+self.reg_y]
+                self.cycles_remaining -= 2 #2 cycles, one to add the reg_y, and one to get the memory contents
+                result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
             when Instructions::SBC_ABS
                 self.cycles_remaining = 3
-                adl = advance_next_ins()
                 adh = advance_next_ins()
-                addr = (adl << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (adh << 8).to_u16 | adl
                 value = self.memory[addr]
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -300,8 +336,8 @@ struct CPU
                 self.cycles_remaining -= 1
             when Instructions::SBC_ZERO
                 self.cycles_remaining = 2
-                adh = advance_next_ins()
-                addr = (0x00 << 8).to_u16 | adh
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
                 value = self.memory[addr]
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -315,6 +351,42 @@ struct CPU
             when Instructions::SBC_IMM
                 self.cycles_remaining = 2
                 value = advance_next_ins()
+                #Check for underflow, if so, set the carry bit to 1
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::SBC_INDIRECT_X
+                self.cycles_remaining = 5
+                adl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | adl
+                addr = self.memory[zaddr+self.reg_x]
+                self.cycles_remaining -= 2
+                value = self.memory[addr]
+                self.cycles_remaining -= 1
+                #Check for underflow, if so, set the carry bit to 1
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::SBC_Y_INDIRECT
+                self.cycles_remaining = 5
+                adl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | adl
+                addr = self.memory[zaddr]
+                self.cycles_remaining -= 1
+                value = self.memory[addr+self.reg_y]
+                self.cycles_remaining -= 2
                 #Check for underflow, if so, set the carry bit to 1
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -397,7 +469,7 @@ struct Memory
     #       $FFFE-$FFFF : BRK/interrupt request handler
     #   Any other locations are free to use by the user
     # getter data = StaticArray(UInt8, 65536).new(0)
-    getter data = Array(UInt8).new(65536, 0)
+    getter data = Bytes.new(65536, 0)
 
     #Read at a 16-bit address
     def [](index : UInt16)
@@ -422,6 +494,10 @@ struct Memory
     #Use an 8-bit address to store an 8-bit value
     def []=(index : UInt8, value : UInt8)
         self.data[index] = value
+    end
+
+    def [](range : Range)
+        self.data[range]
     end
 end
 
@@ -689,6 +765,38 @@ enum Instructions : UInt8
     #Cycle 4    Add contents of 0x{ADL}{ADH} to register A
     #```
     ADC_ABS = 0x6D
+    #This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, into the accumulator (A register) with a carry bit. 
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 2 bytes and takes 6 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH
+    #Cycle 3    ADDR = 0x00{ADH}+X
+    #Cycle 4    Get ADL from ADDR
+    #Cycle 5    Get ADH from ADDR
+    #Cycle 6    Add contents of 0x{ADL}{ADH} to register A
+    #```
+    ADC_INDIRECT_X = 0x61
+    #This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, into the accumulator (A register) with a carry bit. 
+    #
+    #This will take a zero page address for loading an absolute address, indexed to Y
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 2 bytes and takes 6 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH, ADDR = 0x00{ADH}
+    #Cycle 3    Get ADL from ADDR
+    #Cycle 4    Get ADH from ADDR
+    #Cycle 5    ADDR = 0x{ADL}{ADH}+Y
+    #Cycle 6    Add contents of ADDR to register A
+    #```
+    ADC_Y_INDIRECT = 0x71
     #This instruction will subtract an immediate value from the accumulator (A register) with a carry bit. 
     #
     #If the operation underflows below 0, then the result with a carry bit of 1 means to interpret the results as 255 - A.
@@ -726,6 +834,8 @@ enum Instructions : UInt8
     #Cycle 4    Subtract contents of 0x{ADL}{ADH} to register A
     #```
     SBC_ABS = 0xED
+    SBC_INDIRECT_X = 0xE1
+    SBC_Y_INDIRECT = 0xF1
     #This will read a word from the program and push the current program counter onto the stack then setting the program counter to the acquired word.
     #
     #This instruction is 7 cycles and 3 bytes
@@ -816,3 +926,7 @@ puts "yr        #{cpu.reg_y.to_s(16)}"
 puts "pc        #{cpu.program_counter.to_s(16)}"
 puts "sp        #{cpu.stack_pointer.to_s(16)}"
 puts "czidbvn   #{cpu.get_processor_status_string}"
+critical_region = cpu.memory[0x3f56_u16..0x3f5e]
+puts critical_region.hexdump
+zero_page = cpu.memory[0..8]
+puts zero_page.hexdump
