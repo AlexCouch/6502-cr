@@ -39,6 +39,8 @@ struct CPU
     #Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1
     property cycles_remaining = 0
 
+    private property exit_signal = false
+
     def initialize(@debug : Bool)
     end
 
@@ -93,7 +95,7 @@ struct CPU
     #If it fails to decode it, it will print an error.
     def execute
         ins = next_ins()
-        until ins == 0
+        until ins == 0 || self.exit_signal
             case Instructions.new(ins)
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
@@ -469,6 +471,7 @@ struct CPU
         end
     end
 
+    #This will display the state of the CPU
     def display_cpu_state(ins : UInt8)
         print String.build { |str|
             str << "Ins: #{ins.to_s(16)}\n\n"
@@ -482,6 +485,14 @@ struct CPU
     end
 
     #This will return true when it's okay to advance the cpu, but false otherwise
+    #This will only be called when @debug is true (can be toggled by passing -d at command line)
+    #This will display a prompt with two commands: dump stack and dump memory [start] [end]
+    #
+    #*dump stack*
+    #   This command will dump the stack to STDOUT
+    #
+    #*dump memory [start] [end]
+    #   This command will take a start and end addresses and dump their contents to STDOUT
     def display_debug_prompt : Bool
         print "> "
         input_raw = gets
@@ -506,6 +517,9 @@ struct CPU
                     puts "Expected two arguments for memory dump: dump memory [start] [end]"
                 end
             end
+        when input == "exit"
+            self.exit_signal = true
+            return true
         end
         return false
     end
@@ -1003,7 +1017,9 @@ File.open(file_path, "rb") do |file|
     end
 end
 require "io/hexdump"
-puts program.hexdump
+if debug
+    puts program.hexdump
+end
 cpu = CPU.new debug
 cpu.load_program(program.to_a)
 cpu.execute

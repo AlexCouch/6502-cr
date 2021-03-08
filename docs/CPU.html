@@ -134,7 +134,7 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#new-class-method" class="signature"><strong>.new</strong></a>
+        <a href="#new(debug:Bool)-class-method" class="signature"><strong>.new</strong>(debug : Bool)</a>
         
       </li>
     
@@ -172,6 +172,20 @@
         <a href="#cycles_remaining=(cycles_remaining)-instance-method" class="signature"><strong>#cycles_remaining=</strong>(cycles_remaining)</a>
         
           <div class="summary"><p>The cycles remaining for the execution of an instruction.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#display_cpu_state(ins:UInt8)-instance-method" class="signature"><strong>#display_cpu_state</strong>(ins : UInt8)</a>
+        
+          <div class="summary"><p>This will display the state of the CPU</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#display_debug_prompt:Bool-instance-method" class="signature"><strong>#display_debug_prompt</strong> : Bool</a>
+        
+          <div class="summary"><p>This will return true when it's okay to advance the cpu, but false otherwise This will only be called when @debug is true (can be toggled by passing -d at command line) This will display a prompt with two commands: dump stack and dump memory [start] [end]</p></div>
         
       </li>
     
@@ -356,12 +370,12 @@
     Constructor Detail
   </h2>
   
-    <div class="entry-detail" id="new-class-method">
+    <div class="entry-detail" id="new(debug:Bool)-class-method">
       <div class="signature">
         
-        def self.<strong>new</strong>
+        def self.<strong>new</strong>(debug : Bool)
 
-        <a class="method-permalink" href="#new-class-method">#</a>
+        <a class="method-permalink" href="#new(debug:Bool)-class-method">#</a>
       </div>
       
       <br/>
@@ -439,6 +453,52 @@ Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that d
 Some instructions take more cycles than others, so after the first byte is fetched from memory using next_ins,
 then there is 1 less cycle remaining for that instruction.
 Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="display_cpu_state(ins:UInt8)-instance-method">
+      <div class="signature">
+        
+        def <strong>display_cpu_state</strong>(ins : UInt8)
+
+        <a class="method-permalink" href="#display_cpu_state(ins:UInt8)-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>This will display the state of the CPU</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="display_debug_prompt:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>display_debug_prompt</strong> : Bool
+
+        <a class="method-permalink" href="#display_debug_prompt:Bool-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>This will return true when it's okay to advance the cpu, but false otherwise
+This will only be called when @debug is true (can be toggled by passing -d at command line)
+This will display a prompt with two commands: dump stack and dump memory [start] [end]</p>
+
+<p><em>dump stack</em>
+  This command will dump the stack to STDOUT</p>
+
+<p>*dump memory [start] [end]
+  This command will take a start and end addresses and dump their contents to STDOUT</p>
         </div>
       
       <br/>
