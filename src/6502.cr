@@ -39,6 +39,9 @@ struct CPU
     #Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1
     property cycles_remaining = 0
 
+    def initialize(@debug : Bool)
+    end
+
     #Get the next instruction in memory without affecting the cycles remaining. This is mostly used for getting the first byte in an instruction, which would count as the first cycle of an instruction. This will increment the program counter
     def next_ins
         next_ins = self.memory[self.program_counter]
@@ -408,6 +411,14 @@ struct CPU
                 return
             end
             ins = next_ins()
+            if @debug
+                self.display_cpu_state(ins)
+                advance = false
+                until advance
+                    advance = self.display_debug_prompt
+                end
+                
+            end
         end
     end
 
@@ -456,6 +467,47 @@ struct CPU
                 str << 0
             end
         end
+    end
+
+    def display_cpu_state(ins : UInt8)
+        print String.build { |str|
+            str << "Ins: #{ins.to_s(16)}\n\n"
+            str << "ar        #{self.reg_a.to_s(16)}\n"
+            str << "xr        #{self.reg_x.to_s(16)}\n"
+            str << "yr        #{self.reg_y.to_s(16)}\n"
+            str << "pc        #{self.program_counter.to_s(16)}\n"
+            str << "sp        #{self.stack_pointer.to_s(16)}\n"
+            str << "czidbvn   #{self.get_processor_status_string}\n"
+        }
+    end
+
+    #This will return true when it's okay to advance the cpu, but false otherwise
+    def display_debug_prompt : Bool
+        print "> "
+        input_raw = gets
+        if input_raw.nil?
+            return false
+        end
+        input = input_raw.as String
+        case
+        when input == "" 
+            return true
+        when input.starts_with?("dump")
+            args = input.split(' ')
+            case args[1]
+            when "stack"
+                puts self.memory[0x0100..0x01ff].hexdump
+            when "memory"
+                if args.size == 4
+                    start = args[2].to_i(16)
+                    last = args[3].to_i(16)
+                    puts self.memory[start..last].hexdump
+                else
+                    puts "Expected two arguments for memory dump: dump memory [start] [end]"
+                end
+            end
+        end
+        return false
     end
 end
 
@@ -834,7 +886,37 @@ enum Instructions : UInt8
     #Cycle 4    Subtract contents of 0x{ADL}{ADH} to register A
     #```
     SBC_ABS = 0xED
+    #This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, from the accumulator (A register) with a carry bit. 
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 2 bytes and takes 6 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH
+    #Cycle 3    ADDR = 0x00{ADH}+X
+    #Cycle 4    Get ADL from ADDR
+    #Cycle 5    Get ADH from ADDR
+    #Cycle 6    Subtract contents of 0x{ADL}{ADH} from register A
+    #```
     SBC_INDIRECT_X = 0xE1
+    #This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, from the accumulator (A register) with a carry bit. 
+    #
+    #This will take a zero page address for loading an absolute address, indexed to Y
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 2 bytes and takes 6 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH, ADDR = 0x00{ADH}
+    #Cycle 3    Get ADL from ADDR
+    #Cycle 4    Get ADH from ADDR
+    #Cycle 5    ADDR = 0x{ADL}{ADH}+Y
+    #Cycle 6    Subtract contents of ADDR from register A
+    #```
     SBC_Y_INDIRECT = 0xF1
     #This will read a word from the program and push the current program counter onto the stack then setting the program counter to the acquired word.
     #
@@ -897,9 +979,13 @@ enum Instructions : UInt8
 end
 
 file_path = ""
+debug = false
 parser = OptionParser.parse do |parser|
     parser.on("-f FILE", "The file of the program to run in 6502 instructions") do |value|
         file_path = value
+    end
+    parser.on("-d", "Run in debug mode") do
+        debug = true
     end
     parser.on("-h", "Print the usage") do
         puts parser
@@ -908,6 +994,7 @@ parser = OptionParser.parse do |parser|
 end
 if file_path == ""
     puts "Expected a program to run, got nothing. Please use -h for more info."
+    exit(1)
 end
 program = Bytes.new(64)
 File.open(file_path, "rb") do |file|
@@ -917,16 +1004,6 @@ File.open(file_path, "rb") do |file|
 end
 require "io/hexdump"
 puts program.hexdump
-cpu = CPU.new
+cpu = CPU.new debug
 cpu.load_program(program.to_a)
 cpu.execute
-puts "ar        #{cpu.reg_a.to_s(16)}"
-puts "xr        #{cpu.reg_x.to_s(16)}"
-puts "yr        #{cpu.reg_y.to_s(16)}"
-puts "pc        #{cpu.program_counter.to_s(16)}"
-puts "sp        #{cpu.stack_pointer.to_s(16)}"
-puts "czidbvn   #{cpu.get_processor_status_string}"
-critical_region = cpu.memory[0x3f56_u16..0x3f5e]
-puts critical_region.hexdump
-zero_page = cpu.memory[0..8]
-puts zero_page.hexdump
