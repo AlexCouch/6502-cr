@@ -408,6 +408,42 @@ struct CPU
             when Instructions::CLC
                 self.cycles_remaining = 1
                 self.processor_status[0] = false
+            when Instructions::INC_ZERO
+                self.cycles_remaining = 4
+                adl = self.advance_next_ins().to_u16
+                value = self.memory[adl]
+                self.cycles_remaining -= 1
+                self.memory[adl] = value + 1
+                self.cycles_remaining -= 2 #two cause first we increment value then we store it back in zero page adl
+            when Instructions::INC_ZERO_X
+                self.cycles_remaining = 5
+                adl = self.advance_next_ins().to_u16
+                addr = adl + self.reg_x
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                self.cycles_remaining -= 1
+                self.memory[addr] = value + 1
+                self.cycles_remaining -= 2
+            when Instructions::INC_ABS
+                self.cycles_remaining = 5
+                adl = self.advance_next_ins()
+                adh = self.advance_next_ins().to_u16 << 8
+                addr = adh | adl
+                value = self.memory[addr]
+                self.cycles_remaining -= 1
+                self.memory[addr] = value + 1
+                self.cycles_remaining -= 2
+            when Instructions::INC_ABS_X
+                self.cycles_remaining = 6
+                adl = self.advance_next_ins()
+                adh = self.advance_next_ins().to_u16 << 8
+                addr = adh | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                self.cycles_remaining -= 1
+                self.memory[addr] = value + 1
+                self.cycles_remaining -= 2
             else
                 puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"
                 return
@@ -990,6 +1026,11 @@ enum Instructions : UInt8
     SEC     = 0x38
     #This instruction will clear the carry flag to 0
     CLC     = 0x18
+
+    INC_ZERO    = 0xE6
+    INC_ZERO_X  = 0xF6
+    INC_ABS     = 0xEE
+    INC_ABS_X   = 0xFE
 end
 
 file_path = ""
