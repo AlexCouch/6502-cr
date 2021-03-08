@@ -17,3 +17,7 @@ description: |
 #     github: manastech/webmock.cr
 
 # license: MIT
+
+targets:
+  6502:
+    main: src/6502.cr
