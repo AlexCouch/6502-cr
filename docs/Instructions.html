@@ -630,6 +630,24 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </dd>
       
     
+      <dt class="entry-const" id="SEC">
+        <strong>SEC</strong> = <code><span class="n">56_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will set the carry flag to 1</p>
+      </dd>
+      
+    
+      <dt class="entry-const" id="CLC">
+        <strong>CLC</strong> = <code><span class="n">24_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will clear the carry flag to 0</p>
+      </dd>
+      
+    
   </dl>
 
 
@@ -660,6 +678,11 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
     
       <li class="entry-summary">
         <a href="#adc_zero?-instance-method" class="signature"><strong>#adc_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#clc?-instance-method" class="signature"><strong>#clc?</strong></a>
         
       </li>
     
@@ -750,6 +773,11 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
     
       <li class="entry-summary">
         <a href="#sbc_zero?-instance-method" class="signature"><strong>#sbc_zero?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sec?-instance-method" class="signature"><strong>#sec?</strong></a>
         
       </li>
     
@@ -891,6 +919,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>adc_zero?</strong>
 
         <a class="method-permalink" href="#adc_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="clc?-instance-method">
+      <div class="signature">
+        
+        def <strong>clc?</strong>
+
+        <a class="method-permalink" href="#clc?-instance-method">#</a>
       </div>
       
       <br/>
@@ -1143,6 +1185,20 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>sbc_zero?</strong>
 
         <a class="method-permalink" href="#sbc_zero?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sec?-instance-method">
+      <div class="signature">
+        
+        def <strong>sec?</strong>
+
+        <a class="method-permalink" href="#sec?-instance-method">#</a>
       </div>
       
       <br/>
