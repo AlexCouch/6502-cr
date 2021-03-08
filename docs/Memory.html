@@ -158,6 +158,11 @@
       </li>
     
       <li class="entry-summary">
+        <a href="#[](range:Range)-instance-method" class="signature"><strong>#[]</strong>(range : Range)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#[]=(index:Int32,value:UInt8)-instance-method" class="signature"><strong>#[]=</strong>(index : Int32, value : UInt8)</a>
         
           <div class="summary"><p>Use a 32-bit address to store an 8-bit value</p></div>
@@ -179,7 +184,7 @@
       </li>
     
       <li class="entry-summary">
-        <a href="#data:Array(UInt8)-instance-method" class="signature"><strong>#data</strong> : Array(UInt8)</a>
+        <a href="#data:Slice(UInt8)-instance-method" class="signature"><strong>#data</strong> : Slice(UInt8)</a>
         
           <div class="summary"><p>The actual stored data   The first page ($0000 - $00FF) is called the zero page   The second page ($0100 - $01FF) is reserved for the system stack and cannot be relocated   The last 6 bytes are reserved for the following       $FFFA-$FFFB : non-maskable interrupt handler       $FFFC-$FFFD : power reset handler       $FFFE-$FFFF : BRK/interrupt request handler   Any other locations are free to use by the user getter data = StaticArray(UInt8, 65536).new(0)</p></div>
         
@@ -301,6 +306,20 @@
       </div>
     </div>
   
+    <div class="entry-detail" id="[](range:Range)-instance-method">
+      <div class="signature">
+        
+        def <strong>[]</strong>(range : Range)
+
+        <a class="method-permalink" href="#[](range:Range)-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
     <div class="entry-detail" id="[]=(index:Int32,value:UInt8)-instance-method">
       <div class="signature">
         
@@ -358,12 +377,12 @@
       </div>
     </div>
   
-    <div class="entry-detail" id="data:Array(UInt8)-instance-method">
+    <div class="entry-detail" id="data:Slice(UInt8)-instance-method">
       <div class="signature">
         
-        def <strong>data</strong> : Array(UInt8)
+        def <strong>data</strong> : Slice(UInt8)
 
-        <a class="method-permalink" href="#data:Array(UInt8)-instance-method">#</a>
+        <a class="method-permalink" href="#data:Slice(UInt8)-instance-method">#</a>
       </div>
       
         <div class="doc">

@@ -513,6 +513,48 @@ lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array
       </dd>
       
     
+      <dt class="entry-const" id="ADC_INDIRECT_X">
+        <strong>ADC_INDIRECT_X</strong> = <code><span class="n">97_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, into the accumulator (A register) with a carry bit. </p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+
+<p>This instruction takes 2 bytes and takes 6 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x00</span>{<span class="t">ADH</span>}<span class="o">+</span><span class="t">X</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Get</span> <span class="t">ADL</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">5</span>    <span class="t">Get</span> <span class="t">ADH</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">6</span>    <span class="t">Add</span> contents <span class="k">of</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="ADC_Y_INDIRECT">
+        <strong>ADC_Y_INDIRECT</strong> = <code><span class="n">113_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, into the accumulator (A register) with a carry bit. </p>
+
+<p>This will take a zero page address for loading an absolute address, indexed to Y</p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+
+<p>This instruction takes 2 bytes and takes 6 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>, <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x00</span>{<span class="t">ADH</span>}
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Get</span> <span class="t">ADL</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Get</span> <span class="t">ADH</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">5</span>    <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>}<span class="o">+</span><span class="t">Y</span>
+<span class="t">Cycle</span> <span class="n">6</span>    <span class="t">Add</span> contents <span class="k">of</span> <span class="t">ADDR</span> to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
       <dt class="entry-const" id="SBC_IMM">
         <strong>SBC_IMM</strong> = <code><span class="n">233_u8</span></code>
       </dt>
@@ -562,6 +604,48 @@ lda 50, <span class="t">X</span> ;<span class="t">Assuming</span> that the array
 <span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADL</span>
 <span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Read</span> <span class="t">ADH</span>
 <span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Subtract</span> contents <span class="k">of</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} to register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="SBC_INDIRECT_X">
+        <strong>SBC_INDIRECT_X</strong> = <code><span class="n">225_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, from the accumulator (A register) with a carry bit. </p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+
+<p>This instruction takes 2 bytes and takes 6 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x00</span>{<span class="t">ADH</span>}<span class="o">+</span><span class="t">X</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Get</span> <span class="t">ADL</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">5</span>    <span class="t">Get</span> <span class="t">ADH</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">6</span>    <span class="t">Subtract</span> contents <span class="k">of</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>} from register <span class="t">A</span></code></pre>
+      </dd>
+      
+    
+      <dt class="entry-const" id="SBC_Y_INDIRECT">
+        <strong>SBC_Y_INDIRECT</strong> = <code><span class="n">241_u8</span></code>
+      </dt>
+      
+      <dd class="entry-const-doc">
+        <p>This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, from the accumulator (A register) with a carry bit. </p>
+
+<p>This will take a zero page address for loading an absolute address, indexed to Y</p>
+
+<p>If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.</p>
+
+<p>This instruction takes 2 bytes and takes 6 cycles to complete.</p>
+
+<pre><code class="language-crystal"><span class="t">Cycle</span> <span class="n">1</span>    <span class="t">Fetch</span> <span class="t">Opcode</span>
+<span class="t">Cycle</span> <span class="n">2</span>    <span class="t">Read</span> <span class="t">ADH</span>, <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x00</span>{<span class="t">ADH</span>}
+<span class="t">Cycle</span> <span class="n">3</span>    <span class="t">Get</span> <span class="t">ADL</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">4</span>    <span class="t">Get</span> <span class="t">ADH</span> from <span class="t">ADDR</span>
+<span class="t">Cycle</span> <span class="n">5</span>    <span class="t">ADDR</span> <span class="o">=</span> <span class="n">0x</span>{<span class="t">ADL</span>}{<span class="t">ADH</span>}<span class="o">+</span><span class="t">Y</span>
+<span class="t">Cycle</span> <span class="n">6</span>    <span class="t">Subtract</span> contents <span class="k">of</span> <span class="t">ADDR</span> from register <span class="t">A</span></code></pre>
       </dd>
       
     
@@ -677,6 +761,16 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
       </li>
     
       <li class="entry-summary">
+        <a href="#adc_indirect_x?-instance-method" class="signature"><strong>#adc_indirect_x?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#adc_y_indirect?-instance-method" class="signature"><strong>#adc_y_indirect?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#adc_zero?-instance-method" class="signature"><strong>#adc_zero?</strong></a>
         
       </li>
@@ -768,6 +862,16 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
     
       <li class="entry-summary">
         <a href="#sbc_imm?-instance-method" class="signature"><strong>#sbc_imm?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sbc_indirect_x?-instance-method" class="signature"><strong>#sbc_indirect_x?</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#sbc_y_indirect?-instance-method" class="signature"><strong>#sbc_y_indirect?</strong></a>
         
       </li>
     
@@ -905,6 +1009,34 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>adc_imm?</strong>
 
         <a class="method-permalink" href="#adc_imm?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="adc_indirect_x?-instance-method">
+      <div class="signature">
+        
+        def <strong>adc_indirect_x?</strong>
+
+        <a class="method-permalink" href="#adc_indirect_x?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="adc_y_indirect?-instance-method">
+      <div class="signature">
+        
+        def <strong>adc_y_indirect?</strong>
+
+        <a class="method-permalink" href="#adc_y_indirect?-instance-method">#</a>
       </div>
       
       <br/>
@@ -1171,6 +1303,34 @@ The hardware will spend two cycles to set the ADL->PCL and ADH->PCH</p>
         def <strong>sbc_imm?</strong>
 
         <a class="method-permalink" href="#sbc_imm?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sbc_indirect_x?-instance-method">
+      <div class="signature">
+        
+        def <strong>sbc_indirect_x?</strong>
+
+        <a class="method-permalink" href="#sbc_indirect_x?-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="sbc_y_indirect?-instance-method">
+      <div class="signature">
+        
+        def <strong>sbc_y_indirect?</strong>
+
+        <a class="method-permalink" href="#sbc_y_indirect?-instance-method">#</a>
       </div>
       
       <br/>
