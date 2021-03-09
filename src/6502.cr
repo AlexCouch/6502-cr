@@ -842,6 +842,10 @@ struct CPU
                 adh = self.memory[self.program_counter+1]
                 addr = (adh.to_u16 << 8) | adl
                 str << "INC $#{addr.to_s(16)}"
+            when Instructions::CLC
+                str << "CLC"
+            when Instructions::SEC
+                str << "SEC"
             when Instructions::BRK
                 str << "BRK"
             else
@@ -963,7 +967,7 @@ enum Instructions : UInt8
     #Cycle 2    Read higher byte from program
     #Cycle 3    Load from zero page address into X
     #```
-    LDX_ZERO = 0xA5
+    LDX_ZERO = 0xA6
     #This instruction will load a byte from a given 16-bit memory address into the X register.
     #
     #This instruction is 4 cycles and 3 bytes and operate as follows:
