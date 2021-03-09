@@ -609,6 +609,14 @@ struct CPU
                 self.cycles_remaining -= 1
                 self.memory[addr] = value + 1
                 self.cycles_remaining -= 2
+            when Instructions::INX
+                self.cycles_remaining = 1
+                self.reg_x += 1
+                self.cycles_remaining -= 1
+            when Instructions::INY
+                self.cycles_remaining = 1
+                self.reg_y += 1
+                self.cycles_remaining -= 1
             else
                 puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"
                 return
@@ -846,6 +854,10 @@ struct CPU
                 str << "CLC"
             when Instructions::SEC
                 str << "SEC"
+            when Instructions::INX
+                str << "INX"
+            when Instructions::INY
+                str << "INY"
             when Instructions::BRK
                 str << "BRK"
             else
@@ -1464,7 +1476,7 @@ enum Instructions : UInt8
     #Cycle 6    Push PCL
     #Cycle 7    AD->PC
     #```
-    JSR     = 0x20
+    JSR         = 0x20
     #This will return from a subroutine by popping a word off the stack and setting the program counter to it + 1
     #
     #This instruction is 6 cycles and 1 byte.
@@ -1476,16 +1488,19 @@ enum Instructions : UInt8
     #Cycle 5    AD->PC
     #Cycle 6    PC->PC+1
     #```
-    RTS     = 0x60
+    RTS         = 0x60
     #This instruction will set the carry flag to 1
-    SEC     = 0x38
+    SEC         = 0x38
     #This instruction will clear the carry flag to 0
-    CLC     = 0x18
+    CLC         = 0x18
 
     INC_ZERO    = 0xE6
     INC_ZERO_X  = 0xF6
     INC_ABS     = 0xEE
     INC_ABS_X   = 0xFE
+
+    INX         = 0xE8
+    INY         = 0xC8
 
     BRK         = 0x00
 end
