@@ -95,15 +95,20 @@ struct CPU
     #If it fails to decode it, it will print an error.
     def execute
         ins = next_ins()
-        until ins == 0 || self.exit_signal
+        until self.exit_signal
             if @debug
                 self.display_cpu_state(ins)
                 advance = false
                 until advance
                     advance = self.display_debug_prompt
                 end
+                if self.exit_signal
+                    return
+                end
             end
             case Instructions.new(ins)
+            when Instructions::BRK
+                return
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
                 value = advance_next_ins()
@@ -333,11 +338,61 @@ struct CPU
                 self.processor_status[1] = result == 0
                 self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
+            when Instructions::ADC_ZERO_X
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
             when Instructions::ADC_ABS
                 self.cycles_remaining = 3
                 adl = advance_next_ins()
                 adh = advance_next_ins()
                 addr = (adh << 8).to_u16 | adl
+                value = self.memory[addr]
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::ADC_ABS_X
+                self.cycles_remaining = 4
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adh << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::ADC_ABS_Y
+                self.cycles_remaining = 4
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adh << 8).to_u16 | adl
+                addr += self.reg_y
+                self.cycles_remaining -= 1
                 value = self.memory[addr]
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -399,10 +454,60 @@ struct CPU
                 self.processor_status[1] = result == 0
                 self.processor_status[6] = (result & 0x80) == 0x80
                 self.cycles_remaining -= 1
+            when Instructions::SBC_ABS_X
+                self.cycles_remaining = 4
+                adh = advance_next_ins()
+                adl = advance_next_ins()
+                addr = (adh << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::SBC_ABS_Y
+                self.cycles_remaining = 4
+                adh = advance_next_ins()
+                adl = advance_next_ins()
+                addr = (adh << 8).to_u16 | adl
+                addr += self.reg_y
+                self.cycles_remaining -= 1
+                value = self.memory[addr]
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
             when Instructions::SBC_ZERO
                 self.cycles_remaining = 2
                 adl = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adl
+                value = self.memory[addr]
+                result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+                self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
+                overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+                self.reg_a = result
+                # puts overflow.to_s(16)
+                self.processor_status[5] = overflow == 0x80
+                self.processor_status[1] = result == 0
+                self.processor_status[6] = (result & 0x80) == 0x80
+                self.cycles_remaining -= 1
+            when Instructions::SBC_ZERO_X
+                self.cycles_remaining = 2
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
                 value = self.memory[addr]
                 result = self.reg_a &- value &+ self.processor_status.to_slice[0]
                 self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
@@ -678,12 +783,49 @@ struct CPU
                 adh = self.memory[self.program_counter+1]
                 addr = (adh.to_u16 << 8) | adl
                 str << "ADC $#{addr.to_s(16)}"
+            when Instructions::ADC_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "ADC $#{addr.to_s(16)}, X"
+            when Instructions::ADC_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "ADC $#{addr.to_s(16)}, Y"
             when Instructions::ADC_INDIRECT_X
                 adl = self.memory[self.program_counter]
                 str << "ADC ($#{adl.to_s(16)}, X)"
             when Instructions::ADC_Y_INDIRECT
                 adl = self.memory[self.program_counter]
                 str << "ADC ($#{adl.to_s(16)}), Y"
+            when Instructions::SBC_IMM
+                value = self.memory[self.program_counter]
+                str << "SBC \#$#{value.to_s(16)}"
+            when Instructions::SBC_ZERO
+                adl = self.memory[self.program_counter]
+                str << "SBC $#{adl.to_s(16)}"
+            when Instructions::SBC_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}"
+            when Instructions::SBC_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}, X"
+            when Instructions::SBC_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}, Y"
+            when Instructions::SBC_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "SBC ($#{adl.to_s(16)}, X)"
+            when Instructions::SBC_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "SBC ($#{adl.to_s(16)}), Y"
             when Instructions::INC_ABS
                 adl = self.memory[self.program_counter]
                 adh = self.memory[self.program_counter+1]
@@ -829,7 +971,7 @@ enum Instructions : UInt8
     #Cycle 1: Fetch Opcode
     #Cycle 2: Read ADL
     #Cycle 3: Read ADH
-    #Cycle 4: Load 8-bit data of address 0x{ADL}{ADH} into X
+    #Cycle 4: Load 8-bit data of address 0x{ADH}{ADL} into X
     #```
     LDX_ABS = 0xAE
     #This instruction will load a byte from a given 16-bit memory address, indexed to Y
@@ -839,7 +981,7 @@ enum Instructions : UInt8
     #Cycle 1: Fetch Opcode
     #Cycle 2: Read ADL
     #Cycle 3: Read ADH
-    #Cycle 4: Load 8-biot data of address 0x{ADL}{ADH}+Y
+    #Cycle 4: Load 8-biot data of address 0x{ADH}{ADL}+Y
     #```
     #
     #X and Y registers are known as index registers. They are used to offset an address, such as indexing into an array.
@@ -905,7 +1047,7 @@ enum Instructions : UInt8
     #Cycle 1    Fetch Opcode
     #Cycle 2    Read ADL
     #Cycle 3    Read ADH
-    #Cycle 4    Store contents of X at 0x{ADL}{ADH}
+    #Cycle 4    Store contents of X at 0x{ADH}{ADL}
     #```
     STX_ABS = 0x8E
     #This instruction will store the value in register Y in an address in the zero page
@@ -937,7 +1079,7 @@ enum Instructions : UInt8
     #Cycle 1    Fetch Opcode
     #Cycle 2    Read ADL
     #Cycle 3    Read ADH
-    #Cycle 4    Store contents of Y at 0x{ADL}{ADH}
+    #Cycle 4    Store contents of Y at 0x{ADH}{ADL}
     #```
     STY_ABS = 0x8C
     #This instruction will load a byte into the Y register.
@@ -975,7 +1117,7 @@ enum Instructions : UInt8
     #Cycle 2: Read ADL
     #Cycle 3: Read ADH
     #Cycle 4: Increment address by X
-    #Cycle 4: Load 8-bit data of address 0x{ADL}{ADH}+X into Y
+    #Cycle 4: Load 8-bit data of address 0x{ADH}{ADL}+X into Y
     #```
     LDY_ABS_X = 0xBC
     #This instruction will load a byte from a given 16-bit memory address into the Y register.
@@ -985,7 +1127,7 @@ enum Instructions : UInt8
     #Cycle 1: Fetch Opcode
     #Cycle 2: Read ADL
     #Cycle 3: Read ADH
-    #Cycle 4: Load 8-bit data of address 0x{ADL}{ADH} into Y
+    #Cycle 4: Load 8-bit data of address 0x{ADH}{ADL} into Y
     #```
     LDY_ABS = 0xAC
     #This instruction will load a byte into the A register.
@@ -1119,6 +1261,7 @@ enum Instructions : UInt8
     #Cycle 4    Add contents of 0x00{ADH} to register A
     #```
     ADC_ZERO = 0x65
+    ADC_ZERO_X = 0x75
     #This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. 
     #
     #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
@@ -1129,9 +1272,11 @@ enum Instructions : UInt8
     #Cycle 1    Fetch Opcode
     #Cycle 2    Read ADL
     #Cycle 3    Read ADH
-    #Cycle 4    Add contents of 0x{ADL}{ADH} to register A
+    #Cycle 4    Add contents of 0x{ADH}{ADL} to register A
     #```
     ADC_ABS = 0x6D
+    ADC_ABS_X = 0x7D
+    ADC_ABS_Y = 0x79
     #This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, into the accumulator (A register) with a carry bit. 
     #
     #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
@@ -1144,7 +1289,7 @@ enum Instructions : UInt8
     #Cycle 3    ADDR = 0x00{ADH}+X
     #Cycle 4    Get ADL from ADDR
     #Cycle 5    Get ADH from ADDR
-    #Cycle 6    Add contents of 0x{ADL}{ADH} to register A
+    #Cycle 6    Add contents of 0x{ADH}{ADL} to register A
     #```
     ADC_INDIRECT_X = 0x61
     #This instruction will add the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, into the accumulator (A register) with a carry bit. 
@@ -1160,7 +1305,7 @@ enum Instructions : UInt8
     #Cycle 2    Read ADH, ADDR = 0x00{ADH}
     #Cycle 3    Get ADL from ADDR
     #Cycle 4    Get ADH from ADDR
-    #Cycle 5    ADDR = 0x{ADL}{ADH}+Y
+    #Cycle 5    ADDR = 0x{ADH}{ADL}+Y
     #Cycle 6    Add contents of ADDR to register A
     #```
     ADC_Y_INDIRECT = 0x71
@@ -1180,14 +1325,27 @@ enum Instructions : UInt8
     #
     #If the operation underflows below 0, then the result with a carry bit of 1 means to interpret the results as 255 - A.
     #
-    #This instruction takes 3 bytes and takes 4 cycles to complete.
+    #This instruction takes 2 bytes and takes 4 cycles to complete.
     #
     #```
     #Cycle 1    Fetch Opcode
-    #Cycle 3    Read ADH
-    #Cycle 4    Subtract contents of 0x00{ADH} to register A
+    #Cycle 2    Read ADL
+    #Cycle 3    Subtract contents of 0x00{ADL} to register A
     #```
     SBC_ZERO = 0xE5
+    #This instruction will subtract the contents of an address, indexed to X, in the zero page from the accumulator. 
+    #
+    #If the operation underflows below 0, then the result with a carry bit of 1 means to interpret the results as 255 - A.
+    #
+    #This instruction takes 2 bytes and takes 5 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Add X to ADL
+    #Cycle 4    Subtract contents of 0x00{ADL+X} to register A
+    #```
+    SBC_ZERO_X = 0xF5
     #This instruction will add the contents of an absolute memory location into the accumulator (A register) with a carry bit. 
     #
     #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
@@ -1198,9 +1356,37 @@ enum Instructions : UInt8
     #Cycle 1    Fetch Opcode
     #Cycle 2    Read ADL
     #Cycle 3    Read ADH
-    #Cycle 4    Subtract contents of 0x{ADL}{ADH} to register A
+    #Cycle 4    Subtract contents of 0x{ADH}{ADL} to register A
     #```
     SBC_ABS = 0xED
+    #This instruction will add the contents of an absolute memory location, indexed to X, into the accumulator (A register) with a carry bit. 
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 3 bytes and takes 5 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Read ADH
+    #Cycle 4    Add X to ADDR
+    #Cycle 5    Subtract contents of 0x{ADH}{ADL+X} to register A
+    #```
+    SBC_ABS_X = 0xFD
+    #This instruction will add the contents of an absolute memory location, indexed to Y, into the accumulator (A register) with a carry bit. 
+    #
+    #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
+    #
+    #This instruction takes 3 bytes and takes 4 cycles to complete.
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADL
+    #Cycle 3    Read ADH
+    #Cycle 4    Add Y to ADDR
+    #Cycle 5    Subtract contents of 0x{ADH}{ADL+Y} to register A
+    #```
+    SBC_ABS_Y = 0xF9
     #This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode with X added, from the accumulator (A register) with a carry bit. 
     #
     #If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
@@ -1213,7 +1399,7 @@ enum Instructions : UInt8
     #Cycle 3    ADDR = 0x00{ADH}+X
     #Cycle 4    Get ADL from ADDR
     #Cycle 5    Get ADH from ADDR
-    #Cycle 6    Subtract contents of 0x{ADL}{ADH} from register A
+    #Cycle 6    Subtract contents of 0x{ADH}{ADL} from register A
     #```
     SBC_INDIRECT_X = 0xE1
     #This instruction will subtract the contents of an indirect memory location, from the zero page given by the instruction's opcode, followed by Y being added to it, from the accumulator (A register) with a carry bit. 
@@ -1229,7 +1415,7 @@ enum Instructions : UInt8
     #Cycle 2    Read ADH, ADDR = 0x00{ADH}
     #Cycle 3    Get ADL from ADDR
     #Cycle 4    Get ADH from ADDR
-    #Cycle 5    ADDR = 0x{ADL}{ADH}+Y
+    #Cycle 5    ADDR = 0x{ADH}{ADL}+Y
     #Cycle 6    Subtract contents of ADDR from register A
     #```
     SBC_Y_INDIRECT = 0xF1
