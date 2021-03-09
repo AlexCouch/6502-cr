@@ -271,6 +271,28 @@ struct CPU
                 self.cycles_remaining -= 1
                 self.reg_a = self.memory[address]
                 self.cycles_remaining -= 1
+            when Instructions::LDA_INDIRECT_X
+                self.cycles_remaining = 3
+                zadl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | zadl
+                zaddr += self.reg_x
+                adl = self.memory[zaddr]
+                adh = self.memory[zaddr+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                self.cycles_remaining -= 1
+                self.reg_a = self.memory[addr]
+                self.cycles_remaining -= 1
+            when Instructions::LDA_Y_INDIRECT
+                self.cycles_remaining = 3
+                zadl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | zadl
+                adl = self.memory[zaddr]
+                adh = self.memory[zaddr+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                addr += self.reg_y
+                self.cycles_remaining -= 1
+                self.reg_a = self.memory[addr]
+                self.cycles_remaining -= 1
             when Instructions::STA_ZERO
                 self.cycles_remaining = 2
                 adl = advance_next_ins()
@@ -305,6 +327,28 @@ struct CPU
                 self.cycles_remaining = 4
                 adl = advance_next_ins()
                 adh = advance_next_ins()
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                addr += self.reg_y
+                self.cycles_remaining -= 1
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_INDIRECT_X
+                self.cycles_remaining = 3
+                zadl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | zadl
+                zaddr += self.reg_x
+                adl = self.memory[zaddr]
+                adh = self.memory[zaddr+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                self.cycles_remaining -= 1
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_Y_INDIRECT
+                self.cycles_remaining = 3
+                zadl = advance_next_ins()
+                zaddr = (0x00 << 8).to_u16 | zadl
+                adl = self.memory[zaddr]
+                adh = self.memory[zaddr+1]
                 addr = (adh.to_u16 << 8).to_u16 | adl
                 addr += self.reg_y
                 self.cycles_remaining -= 1
@@ -707,6 +751,12 @@ struct CPU
                 adh = self.memory[self.program_counter+1]
                 addr = (adh.to_u16 << 8).to_u16 | adl
                 str << "LDA $#{addr.to_s(16)}, Y"
+            when Instructions::LDA_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "LDA ($#{adl.to_s(16)}, X)"
+            when Instructions::LDA_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "LDA ($#{adl.to_s(16)}), Y"
             when Instructions::STA_ABS
                 adl = self.memory[self.program_counter]
                 adh = self.memory[self.program_counter+1]
@@ -725,6 +775,12 @@ struct CPU
                 adh = self.memory[self.program_counter+1]
                 addr = (adh.to_u16 << 8).to_u16 | adl
                 str << "STA $#{addr.to_s(16)}, Y"
+            when Instructions::STA_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "STA ($#{adl.to_s(16)}, X)"
+            when Instructions::STA_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "STA ($#{adl.to_s(16)}), Y"
             when Instructions::LDX_IMM
                 value = self.memory[self.program_counter]
                 str << "LDX \#$#{value.to_s(16)}"
@@ -915,6 +971,22 @@ struct CPU
         when input == "exit"
             self.exit_signal = true
             return true
+        when input == "help"
+            puts String.build { |str|
+                str << "(dump (stack|memory) | exit | help)\n"
+                str << "  dump\n"
+                str << "    Dumps memory given an argument, either stack or a range of addresses\n\n"
+                str << "    dump stack\n"
+                str << "      Dump the stack to stdout\n\n"
+                str << "    dump memory [start] [end]\n"
+                str << "      Dumps a range of memory given a start and end address\n\n"
+                str << "  exit\n"
+                str << "    Exits the program\n\n"
+                str << "  help\n"
+                str << "    Display this help page"
+            }
+        else
+            puts "Unrecognized command: #{input}; type help for list of commands"
         end
         return false
     end
@@ -1205,6 +1277,8 @@ enum Instructions : UInt8
     #Cycle 5    Load byte from given address into accumulator
     #```
     LDA_ABS_Y = 0xB9
+    LDA_INDIRECT_X = 0xA1
+    LDA_Y_INDIRECT = 0xB1
     #This instruction will store the value in the accumulator (register A) in an address in the zero page
     #
     #This takes two bytes and three cycles
@@ -1257,6 +1331,8 @@ enum Instructions : UInt8
     #Cycle 5    Store contents of accumulator into given address
     #```
     STA_ABS_Y = 0x99
+    STA_INDIRECT_X = 0x81
+    STA_Y_INDIRECT = 0x91
     #This instruction will add an immediate value into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
     #
     #This instruction takes two bytes and takes three cycles to complete.

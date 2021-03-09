@@ -5,20 +5,14 @@
     lda #$3
     sta $31
 
-    ;Move a word of data
-    ldx #0
-    
-    lda $30
-    sta $0850, X
-    inx
-    lda $31
-    sta $0850, X
-
-    lda $50
+    lda #$50
     sta $30
-    lda $08
+    lda #$08
     sta $31
 
     lda #$f
+    sta ($30), Y
+    iny
+    lda #$8
     sta ($30), Y
 
