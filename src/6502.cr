@@ -96,6 +96,13 @@ struct CPU
     def execute
         ins = next_ins()
         until ins == 0 || self.exit_signal
+            if @debug
+                self.display_cpu_state(ins)
+                advance = false
+                until advance
+                    advance = self.display_debug_prompt
+                end
+            end
             case Instructions.new(ins)
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
@@ -228,14 +235,41 @@ struct CPU
                 self.cycles_remaining -= 1
             when Instructions::LDA_ABS
                 self.cycles_remaining = 3
-                lower = (advance_next_ins() << 8).to_u16
-                higher = advance_next_ins()
-                address = lower | higher
+                lower = advance_next_ins()
+                higher = advance_next_ins().to_u16 << 8
+                address = higher | lower
                 self.reg_a = self.memory[address]
+                self.cycles_remaining -= 1
+            when Instructions::LDA_ABS_X
+                self.cycles_remaining = 4
+                lower = advance_next_ins()
+                higher = advance_next_ins().to_u16 << 8
+                address = higher | lower
+                address += self.reg_x
+                self.cycles_remaining -= 1
+                self.reg_a = self.memory[address]
+                self.cycles_remaining -= 1
+            when Instructions::LDA_ABS_Y
+                self.cycles_remaining = 4
+                lower = advance_next_ins()
+                higher = advance_next_ins().to_u16 << 8
+                address = higher | lower
+                address += self.reg_y
+                self.cycles_remaining -= 1
+                self.reg_a = self.memory[address]
+                self.cycles_remaining -= 1
             when Instructions::STA_ZERO
                 self.cycles_remaining = 2
                 adl = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adl
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_ZERO_X
+                self.cycles_remaining = 3
+                adl = advance_next_ins()
+                addr = (0x00 << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
                 self.memory[addr] = self.reg_a
                 self.cycles_remaining -= 1
             when Instructions::STA_ABS
@@ -243,6 +277,24 @@ struct CPU
                 adl = advance_next_ins()
                 adh = advance_next_ins()
                 addr = (adh.to_u16 << 8).to_u16 | adl
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_ABS_X
+                self.cycles_remaining = 4
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                addr += self.reg_x
+                self.cycles_remaining -= 1
+                self.memory[addr] = self.reg_a
+                self.cycles_remaining -= 1
+            when Instructions::STA_ABS_Y
+                self.cycles_remaining = 4
+                adl = advance_next_ins()
+                adh = advance_next_ins()
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                addr += self.reg_y
+                self.cycles_remaining -= 1
                 self.memory[addr] = self.reg_a
                 self.cycles_remaining -= 1
             when Instructions::ADC_IMM
@@ -449,13 +501,13 @@ struct CPU
                 return
             end
             ins = next_ins()
-            if @debug
-                self.display_cpu_state(ins)
-                advance = false
-                until advance
-                    advance = self.display_debug_prompt
-                end
-                
+            
+        end
+        if @debug
+            self.display_cpu_state(ins)
+            advance = false
+            until advance
+                advance = self.display_debug_prompt
             end
         end
     end
@@ -507,10 +559,41 @@ struct CPU
         end
     end
 
+    def display_instruction(ins : UInt8)
+        String.build do |str|
+            case Instructions.new(ins)
+            when Instructions::LDA_IMM
+                value = self.memory[self.program_counter]
+                str << "LDA \#$#{value.to_s(16)}"
+            when Instructions::LDA_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}"
+            when Instructions::LDA_ZERO
+                adl = self.memory[self.program_counter]
+                str << "LDA $#{adl.to_s(16)}"
+            when Instructions::LDA_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}, X"
+            when Instructions::LDA_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}, Y"
+                
+            else
+                str << ins.to_s(16)
+            end
+        end
+    end
+
     #This will display the state of the CPU
     def display_cpu_state(ins : UInt8)
         print String.build { |str|
-            str << "Ins: #{ins.to_s(16)}\n\n"
+            str << "Ins: #{display_instruction(ins)}\n\n"
             str << "ar        #{self.reg_a.to_s(16)}\n"
             str << "xr        #{self.reg_x.to_s(16)}\n"
             str << "yr        #{self.reg_y.to_s(16)}\n"
@@ -814,6 +897,28 @@ enum Instructions : UInt8
     #Cycle 4    Load byte from given address into accumulator
     #```
     LDA_ABS = 0xAD
+    #This instruction will load a byte from an absolute address, indexed to X, into the accumulator
+    #
+    #This instruction is 5 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Add contents of X to read address
+    #Cycle 5    Load byte from given address into accumulator
+    #```
+    LDA_ABS_X = 0xBD
+    #This instruction will load a byte from an absolute address, indexed to Y, into the accumulator
+    #
+    #This instruction is 5 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Add contents of Y to read address
+    #Cycle 5    Load byte from given address into accumulator
+    #```
+    LDA_ABS_Y = 0xB9
     #This instruction will store the value in the accumulator (register A) in an address in the zero page
     #
     #This takes two bytes and three cycles
@@ -824,6 +929,17 @@ enum Instructions : UInt8
     #Cycle 3    Store contents of A at 0x00{ADH} where ADH is the address within the zero page, and 0x00 is the lower byte of the address
     #```
     STA_ZERO = 0x85
+    #This instruction will store the value in the accumulator (register A) in an address in the zero page, indexed to X
+    #
+    #This takes two bytes and four cycles
+    #
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read ADH, ADDR = 0x00{ADH}
+    #Cycle 3    Add X to ADDR
+    #Cycle 4    Store contents of A at ADDR where ADH is the address within the zero page, and 0x00 is the lower byte of the address
+    #```
+    STA_ZERO_X = 0x95
     #This instruction will store the contents of the accumulator into an absolute address
     #
     #This instruction is 4 cycles and 3 bytes
@@ -834,6 +950,27 @@ enum Instructions : UInt8
     #Cycle 4    Store contents of accumulator into given address
     #```
     STA_ABS = 0x8D
+    #This instruction will store the contents of the accumulator into an absolute address, indexed to X
+    #
+    #This instruction is 5 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Add X to given address
+    #Cycle 5    Store contents of accumulator into given address
+    #```
+    STA_ABS_X = 0x9D
+    #This instruction will store the contents of the accumulator into an absolute address, indexed to Y    #
+    #This instruction is 5 cycles and 3 bytes
+    #```
+    #Cycle 1    Fetch Opcode
+    #Cycle 2    Read lower byte
+    #Cycle 3    Read higher byte
+    #Cycle 4    Add Y to given address
+    #Cycle 5    Store contents of accumulator into given address
+    #```
+    STA_ABS_Y = 0x99
     #This instruction will add an immediate value into the accumulator (A register) with a carry bit. If the operation overflows beyond 255, then the result with a carry bit of 1 means to interpret the results as 255 + A.
     #
     #This instruction takes two bytes and takes three cycles to complete.
