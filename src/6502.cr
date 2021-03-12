@@ -307,6 +307,8 @@ struct CPU
     property disassembler : Disassembler
 
     private property exit_signal = false
+    private property run_no_stop = false
+    private property run_until : UInt16 = 0
 
     def initialize(@debug : Bool, @disassembler : Disassembler, @memory : Memory)
     end
@@ -364,18 +366,20 @@ struct CPU
         ins = next_ins()
         until self.exit_signal
             if @debug
-                self.display_cpu_state(ins)
-                advance = false
-                until advance
-                    advance = self.display_debug_prompt
-                end
-                if self.exit_signal
-                    return
+                if !self.run_no_stop || self.run_until == self.program_counter
+                    self.display_cpu_state(ins)
+                    advance = false
+                    until advance
+                        advance = self.display_debug_prompt
+                    end
+                    if self.exit_signal
+                        return
+                    end
                 end
             end
             case Instructions.new(ins)
             when Instructions::BRK
-                return
+                break
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
                 value = advance_next_ins()
@@ -996,6 +1000,7 @@ struct CPU
     #This will display the state of the CPU
     def display_cpu_state(ins : UInt8)
         print String.build { |str|
+            self.disassembler.program_counter = self.program_counter
             str << "Ins: #{self.disassembler.display_instruction(ins)}\n\n"
             str << "ar        #{self.reg_a.to_s(16)}\n"
             str << "xr        #{self.reg_x.to_s(16)}\n"
@@ -1039,6 +1044,14 @@ struct CPU
                     puts "Expected two arguments for memory dump: dump memory [start] [end]"
                 end
             end
+        when input == "run"
+            self.run_no_stop = true
+            return true
+        when input.starts_with?("runto")
+            args = input.split(' ')
+            addr = args[1].to_u16(16)
+            self.run_until = addr
+            return true
         when input == "exit"
             self.exit_signal = true
             return true
