@@ -366,6 +366,10 @@ struct CPU
         ins = next_ins()
         until self.exit_signal
             if @debug
+                #TODO: We need to separate the two kinds of run command logic
+                #because if run_no_stop is false but we have run_until set, then
+                #while run_until == self.program_counter is false, then !run_no_stop will always be true
+                #so we need to implement a way to make this detached from each other somehow
                 if !self.run_no_stop || self.run_until == self.program_counter
                     self.display_cpu_state(ins)
                     advance = false
