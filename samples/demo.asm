@@ -12,7 +12,7 @@
 
     lda #$f
     sta ($30), Y
-    iny
+    inx
     lda #$8
-    sta ($30), Y
+    sta ($30, X)
 

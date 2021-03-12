@@ -1,6 +1,225 @@
 require "bit_array"
 require "option_parser"
 
+struct Disassembler
+    property program_counter : UInt16 = 0x0200
+    getter memory : Memory
+    def initialize(@memory : Memory)
+    end
+
+    def dump_program
+        String.build { |str|
+            self.memory[0x0200..0x02ff].each_with_index { |byte,index|
+                if byte == 0
+                    next
+                end
+                str << "#{(0x0200 + index).to_s(16)} "
+                str << display_instruction(byte)
+                str << "\n"
+            }
+            self.program_counter = 0x0200
+        }
+    end
+
+    def display_instruction(ins : UInt8)
+        String.build do |str|
+            case Instructions.new(ins)
+            when Instructions::LDA_IMM
+                value = self.memory[self.program_counter]
+                str << "LDA \#$#{value.to_s(16)}"
+            when Instructions::LDA_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}"
+            when Instructions::LDA_ZERO
+                adl = self.memory[self.program_counter]
+                str << "LDA $#{adl.to_s(16)}"
+            when Instructions::LDA_ZERO_X
+                adl = self.memory[self.program_counter]
+                str << "LDA $#{adl.to_s(16)}, X"
+            when Instructions::LDA_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}, X"
+            when Instructions::LDA_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDA $#{addr.to_s(16)}, Y"
+            when Instructions::LDA_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "LDA ($#{adl.to_s(16)}, X)"
+            when Instructions::LDA_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "LDA ($#{adl.to_s(16)}), Y"
+            when Instructions::STA_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "STA $#{addr.to_s(16)}"
+            when Instructions::STA_ZERO
+                adl = self.memory[self.program_counter]
+                str << "STA $#{adl.to_s(16)}"
+            when Instructions::STA_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "STA $#{addr.to_s(16)}, X"
+            when Instructions::STA_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "STA $#{addr.to_s(16)}, Y"
+            when Instructions::STA_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "STA ($#{adl.to_s(16)}, X)"
+            when Instructions::STA_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "STA ($#{adl.to_s(16)}), Y"
+            when Instructions::LDX_IMM
+                value = self.memory[self.program_counter]
+                str << "LDX \#$#{value.to_s(16)}"
+            when Instructions::LDX_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDX $#{addr.to_s(16)}"
+            when Instructions::LDX_ZERO
+                adl = self.memory[self.program_counter]
+                str << "LDX $#{adl.to_s(16)}"
+            when Instructions::LDX_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDX $#{addr.to_s(16)}, Y"
+            when Instructions::STX_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "STX $#{addr.to_s(16)}"
+            when Instructions::STX_ZERO
+                adl = self.memory[self.program_counter]
+                str << "STX $#{adl.to_s(16)}"
+            #LDY/STY
+            when Instructions::LDY_IMM
+                value = self.memory[self.program_counter]
+                str << "LDY \#$#{value.to_s(16)}"
+            when Instructions::LDY_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDY $#{addr.to_s(16)}"
+            when Instructions::LDY_ZERO
+                adl = self.memory[self.program_counter]
+                str << "LDY $#{adl.to_s(16)}"
+            when Instructions::LDY_ZERO_X
+                adl = self.memory[self.program_counter]
+                str << "LDY $#{adl.to_s(16)}, X"
+            when Instructions::LDY_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "LDY $#{addr.to_s(16)}, Y"
+            when Instructions::STY_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8).to_u16 | adl
+                str << "STY $#{addr.to_s(16)}"
+            when Instructions::STY_ZERO
+                adl = self.memory[self.program_counter]
+                str << "STY $#{adl.to_s(16)}"
+            when Instructions::STY_ZERO_X
+                adl = self.memory[self.program_counter]
+                str << "STY $#{adl.to_s(16)}, X"
+            when Instructions::ADC_IMM
+                value = self.memory[self.program_counter]
+                str << "ADC \#$#{value.to_s(16)}"
+            when Instructions::ADC_ZERO
+                adl = self.memory[self.program_counter]
+                str << "ADC $#{adl.to_s(16)}"
+            when Instructions::ADC_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "ADC $#{addr.to_s(16)}"
+            when Instructions::ADC_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "ADC $#{addr.to_s(16)}, X"
+            when Instructions::ADC_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "ADC $#{addr.to_s(16)}, Y"
+            when Instructions::ADC_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "ADC ($#{adl.to_s(16)}, X)"
+            when Instructions::ADC_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "ADC ($#{adl.to_s(16)}), Y"
+            when Instructions::SBC_IMM
+                value = self.memory[self.program_counter]
+                str << "SBC \#$#{value.to_s(16)}"
+            when Instructions::SBC_ZERO
+                adl = self.memory[self.program_counter]
+                str << "SBC $#{adl.to_s(16)}"
+            when Instructions::SBC_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}"
+            when Instructions::SBC_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}, X"
+            when Instructions::SBC_ABS_Y
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "SBC $#{addr.to_s(16)}, Y"
+            when Instructions::SBC_INDIRECT_X
+                adl = self.memory[self.program_counter]
+                str << "SBC ($#{adl.to_s(16)}, X)"
+            when Instructions::SBC_Y_INDIRECT
+                adl = self.memory[self.program_counter]
+                str << "SBC ($#{adl.to_s(16)}), Y"
+            when Instructions::INC_ABS
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "INC $#{addr.to_s(16)}"
+            when Instructions::INC_ZERO
+                adl = self.memory[self.program_counter]
+                str << "INC $#{adl.to_s(16)}"
+            when Instructions::INC_ZERO_X
+                adl = self.memory[self.program_counter]
+                str << "INC $#{adl.to_s(16)}, X"
+            when Instructions::INC_ABS_X
+                adl = self.memory[self.program_counter]
+                adh = self.memory[self.program_counter+1]
+                addr = (adh.to_u16 << 8) | adl
+                str << "INC $#{addr.to_s(16)}"
+            when Instructions::CLC
+                str << "CLC"
+            when Instructions::SEC
+                str << "SEC"
+            when Instructions::INX
+                str << "INX"
+            when Instructions::INY
+                str << "INY"
+            when Instructions::BRK
+                str << "BRK"
+            else
+                str << ins.to_s(16)
+            end
+        end
+    end
+end
+
 #The core CPU that will have the methods and IV's necessary to emulate the 6502 microprocessor
 struct CPU
     #X register
@@ -32,16 +251,18 @@ struct CPU
     #```
     getter processor_status : BitArray = BitArray.new(7)
     #The memory of the cpu
-    getter memory = Memory.new
+    getter memory : Memory
     #The cycles remaining for the execution of an instruction.
     #Some instructions take more cycles than others, so after the first byte is fetched from memory using next_ins,
     #then there is 1 less cycle remaining for that instruction.
     #Example: LDX_IMM has 2 cycles, but after the first call to next_ins drops that down to 1, so when it's being processed, this will be set to 1
     property cycles_remaining = 0
 
+    property disassembler : Disassembler
+
     private property exit_signal = false
 
-    def initialize(@debug : Bool)
+    def initialize(@debug : Bool, @disassembler : Disassembler, @memory : Memory)
     end
 
     #Get the next instruction in memory without affecting the cycles remaining. This is mostly used for getting the first byte in an instruction, which would count as the first cycle of an instruction. This will increment the program counter
@@ -724,208 +945,12 @@ struct CPU
         end
     end
 
-    def display_instruction(ins : UInt8)
-        String.build do |str|
-            case Instructions.new(ins)
-            when Instructions::LDA_IMM
-                value = self.memory[self.program_counter]
-                str << "LDA \#$#{value.to_s(16)}"
-            when Instructions::LDA_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDA $#{addr.to_s(16)}"
-            when Instructions::LDA_ZERO
-                adl = self.memory[self.program_counter]
-                str << "LDA $#{adl.to_s(16)}"
-            when Instructions::LDA_ZERO_X
-                adl = self.memory[self.program_counter]
-                str << "LDA $#{adl.to_s(16)}, X"
-            when Instructions::LDA_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDA $#{addr.to_s(16)}, X"
-            when Instructions::LDA_ABS_Y
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDA $#{addr.to_s(16)}, Y"
-            when Instructions::LDA_INDIRECT_X
-                adl = self.memory[self.program_counter]
-                str << "LDA ($#{adl.to_s(16)}, X)"
-            when Instructions::LDA_Y_INDIRECT
-                adl = self.memory[self.program_counter]
-                str << "LDA ($#{adl.to_s(16)}), Y"
-            when Instructions::STA_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "STA $#{addr.to_s(16)}"
-            when Instructions::STA_ZERO
-                adl = self.memory[self.program_counter]
-                str << "STA $#{adl.to_s(16)}"
-            when Instructions::STA_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "STA $#{addr.to_s(16)}, X"
-            when Instructions::STA_ABS_Y
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "STA $#{addr.to_s(16)}, Y"
-            when Instructions::STA_INDIRECT_X
-                adl = self.memory[self.program_counter]
-                str << "STA ($#{adl.to_s(16)}, X)"
-            when Instructions::STA_Y_INDIRECT
-                adl = self.memory[self.program_counter]
-                str << "STA ($#{adl.to_s(16)}), Y"
-            when Instructions::LDX_IMM
-                value = self.memory[self.program_counter]
-                str << "LDX \#$#{value.to_s(16)}"
-            when Instructions::LDX_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDX $#{addr.to_s(16)}"
-            when Instructions::LDX_ZERO
-                adl = self.memory[self.program_counter]
-                str << "LDX $#{adl.to_s(16)}"
-            when Instructions::LDX_ABS_Y
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDX $#{addr.to_s(16)}, Y"
-            when Instructions::STX_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "STX $#{addr.to_s(16)}"
-            when Instructions::STX_ZERO
-                adl = self.memory[self.program_counter]
-                str << "STX $#{adl.to_s(16)}"
-            #LDY/STY
-            when Instructions::LDY_IMM
-                value = self.memory[self.program_counter]
-                str << "LDY \#$#{value.to_s(16)}"
-            when Instructions::LDY_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDY $#{addr.to_s(16)}"
-            when Instructions::LDY_ZERO
-                adl = self.memory[self.program_counter]
-                str << "LDY $#{adl.to_s(16)}"
-            when Instructions::LDY_ZERO_X
-                adl = self.memory[self.program_counter]
-                str << "LDY $#{adl.to_s(16)}, X"
-            when Instructions::LDY_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "LDY $#{addr.to_s(16)}, Y"
-            when Instructions::STY_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8).to_u16 | adl
-                str << "STY $#{addr.to_s(16)}"
-            when Instructions::STY_ZERO
-                adl = self.memory[self.program_counter]
-                str << "STY $#{adl.to_s(16)}"
-            when Instructions::STY_ZERO_X
-                adl = self.memory[self.program_counter]
-                str << "STY $#{adl.to_s(16)}, X"
-            when Instructions::ADC_IMM
-                value = self.memory[self.program_counter]
-                str << "ADC \#$#{value.to_s(16)}"
-            when Instructions::ADC_ZERO
-                adl = self.memory[self.program_counter]
-                str << "ADC $#{adl.to_s(16)}"
-            when Instructions::ADC_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "ADC $#{addr.to_s(16)}"
-            when Instructions::ADC_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "ADC $#{addr.to_s(16)}, X"
-            when Instructions::ADC_ABS_Y
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "ADC $#{addr.to_s(16)}, Y"
-            when Instructions::ADC_INDIRECT_X
-                adl = self.memory[self.program_counter]
-                str << "ADC ($#{adl.to_s(16)}, X)"
-            when Instructions::ADC_Y_INDIRECT
-                adl = self.memory[self.program_counter]
-                str << "ADC ($#{adl.to_s(16)}), Y"
-            when Instructions::SBC_IMM
-                value = self.memory[self.program_counter]
-                str << "SBC \#$#{value.to_s(16)}"
-            when Instructions::SBC_ZERO
-                adl = self.memory[self.program_counter]
-                str << "SBC $#{adl.to_s(16)}"
-            when Instructions::SBC_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "SBC $#{addr.to_s(16)}"
-            when Instructions::SBC_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "SBC $#{addr.to_s(16)}, X"
-            when Instructions::SBC_ABS_Y
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "SBC $#{addr.to_s(16)}, Y"
-            when Instructions::SBC_INDIRECT_X
-                adl = self.memory[self.program_counter]
-                str << "SBC ($#{adl.to_s(16)}, X)"
-            when Instructions::SBC_Y_INDIRECT
-                adl = self.memory[self.program_counter]
-                str << "SBC ($#{adl.to_s(16)}), Y"
-            when Instructions::INC_ABS
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "INC $#{addr.to_s(16)}"
-            when Instructions::INC_ZERO
-                adl = self.memory[self.program_counter]
-                str << "INC $#{adl.to_s(16)}"
-            when Instructions::INC_ZERO_X
-                adl = self.memory[self.program_counter]
-                str << "INC $#{adl.to_s(16)}, X"
-            when Instructions::INC_ABS_X
-                adl = self.memory[self.program_counter]
-                adh = self.memory[self.program_counter+1]
-                addr = (adh.to_u16 << 8) | adl
-                str << "INC $#{addr.to_s(16)}"
-            when Instructions::CLC
-                str << "CLC"
-            when Instructions::SEC
-                str << "SEC"
-            when Instructions::INX
-                str << "INX"
-            when Instructions::INY
-                str << "INY"
-            when Instructions::BRK
-                str << "BRK"
-            else
-                str << ins.to_s(16)
-            end
-        end
-    end
+    
 
     #This will display the state of the CPU
     def display_cpu_state(ins : UInt8)
         print String.build { |str|
-            str << "Ins: #{display_instruction(ins)}\n\n"
+            str << "Ins: #{self.disassembler.display_instruction(ins)}\n\n"
             str << "ar        #{self.reg_a.to_s(16)}\n"
             str << "xr        #{self.reg_x.to_s(16)}\n"
             str << "yr        #{self.reg_y.to_s(16)}\n"
@@ -992,7 +1017,7 @@ struct CPU
     end
 end
 
-struct Memory
+class Memory
     #The actual stored data
     #   The first page ($0000 - $00FF) is called the zero page
     #   The second page ($0100 - $01FF) is reserved for the system stack and cannot be relocated
@@ -1605,9 +1630,10 @@ File.open(file_path, "rb") do |file|
         program[index] = byte
     end
 end
-if debug
-    puts program.hexdump
-end
-cpu = CPU.new debug
+memory = Memory.new
+cpu = CPU.new(debug, Disassembler.new(memory), memory)
 cpu.load_program(program.to_a)
+if debug
+    puts cpu.disassembler.dump_program
+end
 cpu.execute
