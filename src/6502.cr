@@ -307,7 +307,6 @@ struct CPU
     property disassembler : Disassembler
 
     private property exit_signal = false
-    private property run_no_stop = false
     private property run_until : UInt16 = 0
 
     def initialize(@debug : Bool, @disassembler : Disassembler, @memory : Memory)
@@ -370,7 +369,7 @@ struct CPU
                 #because if run_no_stop is false but we have run_until set, then
                 #while run_until == self.program_counter is false, then !run_no_stop will always be true
                 #so we need to implement a way to make this detached from each other somehow
-                if !self.run_no_stop || self.run_until == self.program_counter
+                if self.run_until == self.program_counter
                     self.display_cpu_state(ins)
                     advance = false
                     until advance
@@ -1049,7 +1048,7 @@ struct CPU
                 end
             end
         when input == "run"
-            self.run_no_stop = true
+            @debug = false
             return true
         when input.starts_with?("runto")
             args = input.split(' ')
