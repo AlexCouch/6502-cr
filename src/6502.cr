@@ -369,7 +369,7 @@ struct CPU
                 #because if run_no_stop is false but we have run_until set, then
                 #while run_until == self.program_counter is false, then !run_no_stop will always be true
                 #so we need to implement a way to make this detached from each other somehow
-                if self.run_until == self.program_counter
+                if self.run_until == 0 || self.run_until == self.program_counter
                     self.display_cpu_state(ins)
                     advance = false
                     until advance
@@ -382,6 +382,7 @@ struct CPU
             end
             case Instructions.new(ins)
             when Instructions::BRK
+                @debug = false
                 break
             when Instructions::LDX_IMM
                 self.cycles_remaining = 1
@@ -935,6 +936,46 @@ struct CPU
                 self.cycles_remaining = 1
                 self.reg_y += 1
                 self.cycles_remaining -= 1
+            when Instructions::DEC_ZERO
+                self.cycles_remaining = 3
+                adl = self.advance_next_ins()
+                self.memory[adl] &-= 1
+                self.cycles_remaining -= 2
+            when Instructions::DEC_ZERO_X
+                self.cycles_remaining = 4
+                adl = self.advance_next_ins()
+                addr = adl + self.reg_x
+                self.cycles_remaining -= 1
+                self.memory[addr] -= 1
+                self.cycles_remaining -= 2
+            when Instructions::DEC_ABS
+                self.cycles_remaining = 5
+                adl = self.advance_next_ins()
+                adh = self.advance_next_ins().to_u16 << 8
+                addr = adh | adl
+                value = self.memory[addr]
+                value -= 1
+                self.cycles_remaining -= 1
+                self.memory[addr] = value
+                self.cycles_remaining -= 1
+            when Instructions::DEC_ABS_X
+                self.cycles_remaining = 5
+                adl = self.advance_next_ins()
+                adh = self.advance_next_ins().to_u16 << 8
+                addr = adh | adl
+                value = self.memory[addr + self.reg_x]
+                value -= 1
+                self.cycles_remaining -= 1
+                self.memory[addr + self.reg_x] = value
+                self.cycles_remaining -= 1
+            when Instructions::DEX
+                self.cycles_remaining = 1
+                self.reg_x &-= 1
+                self.cycles_remaining -= 1
+            when Instructions::DEY
+                self.cycles_remaining = 1
+                self.reg_y &-= 1
+                self.cycles_remaining -= 1
             else
                 puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"
                 return
@@ -1004,7 +1045,7 @@ struct CPU
     def display_cpu_state(ins : UInt8)
         print String.build { |str|
             self.disassembler.program_counter = self.program_counter
-            str << "Ins: #{self.disassembler.display_instruction(ins)}\n\n"
+            str << "\n#{self.program_counter.to_s(16)}: #{self.disassembler.display_instruction(ins)}\n"
             str << "ar        #{self.reg_a.to_s(16)}\n"
             str << "xr        #{self.reg_x.to_s(16)}\n"
             str << "yr        #{self.reg_y.to_s(16)}\n"
@@ -1664,6 +1705,14 @@ enum Instructions : UInt8
 
     INX         = 0xE8
     INY         = 0xC8
+
+    DEC_ZERO    = 0xC6
+    DEC_ZERO_X  = 0xD6
+    DEC_ABS     = 0xCE
+    DEC_ABS_X   = 0xDE
+
+    DEX         = 0xCA
+    DEY         = 0x88
 
     BRK         = 0x00
 end
