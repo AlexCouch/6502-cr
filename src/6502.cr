@@ -358,15 +358,19 @@ struct CPU
         value
     end
 
-    def add_sub_and_update_status(value : UInt8, minus=false)
+    def add_sub_and_update_status(origin : UInt8, value : UInt8, minus=false)
         #Check for underflow, if so, set the carry bit to 1
-        if minus
-            result = self.reg_a &- value &+ self.processor_status.to_slice[0]
+        result = if minus
+            base = value &+ if self.processor_status.to_slice[0] 1 else 0 end
+            origin &- base
         else
-            result = self.reg_a &+ value &+ self.processor_status.to_slice[0]
+            origin &+ value &+ self.processor_status.to_slice[0]
         end
-        self.processor_status[0] = (self.reg_a & 0x80) != (result & 0x80)
-        overflow = ~(self.reg_a ^ value) & (self.reg_a ^ result) & 0x80
+        puts "origin = #{origin}"
+        puts "value = #{value}"
+        puts "result = #{result}"
+        self.processor_status[0] = (origin & 0x80) != (result & 0x80)
+        overflow = ~(origin ^ value) & (origin ^ result) & 0x80
         # puts overflow.to_s(16)
         self.processor_status[5] = overflow == 0x80
         self.processor_status[1] = result == 0
@@ -381,10 +385,6 @@ struct CPU
         ins = next_ins()
         until self.exit_signal
             if @debug
-                #TODO: We need to separate the two kinds of run command logic
-                #because if run_no_stop is false but we have run_until set, then
-                #while run_until == self.program_counter is false, then !run_no_stop will always be true
-                #so we need to implement a way to make this detached from each other somehow
                 if self.run_until == 0 || self.run_until == self.program_counter
                     self.display_cpu_state(ins)
                     advance = false
@@ -649,7 +649,7 @@ struct CPU
                 self.cycles_remaining = 1
                 value = advance_next_ins()
                 #Check for overflow, if so, set the carry bit to 1
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
 
@@ -658,7 +658,7 @@ struct CPU
                 adl = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adl
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_ZERO_X
@@ -668,7 +668,7 @@ struct CPU
                 addr += self.reg_x
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_ABS
@@ -677,7 +677,7 @@ struct CPU
                 adh = advance_next_ins()
                 addr = (adh << 8).to_u16 | adl
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_ABS_X
@@ -688,7 +688,7 @@ struct CPU
                 addr += self.reg_x
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_ABS_Y
@@ -699,7 +699,7 @@ struct CPU
                 addr += self.reg_y
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_INDIRECT_X
@@ -710,7 +710,7 @@ struct CPU
                 self.cycles_remaining -= 2 #2 cycles, one to add the reg_x, and one to get the memory contents
                 value = self.memory[addr]
                 self.cycles_remaining -= 1
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::ADC_Y_INDIRECT
@@ -723,7 +723,7 @@ struct CPU
                 self.cycles_remaining -= 1 
                 value = self.memory[addr+self.reg_y]
                 self.cycles_remaining -= 2 #2 cycles, one to add the reg_y, and one to get the memory contents
-                self.reg_a = self.add_sub_and_update_status(value)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value)
 
                 self.cycles_remaining -= 1
             when Instructions::SBC_ABS
@@ -732,7 +732,7 @@ struct CPU
                 adl = advance_next_ins()
                 addr = (adh << 8).to_u16 | adl
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value, true)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
 
                 self.cycles_remaining -= 1
             when Instructions::SBC_ABS_X
@@ -743,7 +743,7 @@ struct CPU
                 addr += self.reg_x
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value, true)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
 
                 self.cycles_remaining -= 1
             when Instructions::SBC_ABS_Y
@@ -754,16 +754,14 @@ struct CPU
                 addr += self.reg_y
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value, true)
-
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SBC_ZERO
                 self.cycles_remaining = 2
                 adl = advance_next_ins()
                 addr = (0x00 << 8).to_u16 | adl
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value, true)
-
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SBC_ZERO_X
                 self.cycles_remaining = 2
@@ -772,15 +770,13 @@ struct CPU
                 addr += self.reg_x
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
-                self.reg_a = self.add_sub_and_update_status(value, true)
-
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SBC_IMM
                 self.cycles_remaining = 2
                 value = advance_next_ins()
                 #Check for underflow, if so, set the carry bit to 1
-                self.reg_a = self.add_sub_and_update_status(value, true)
-
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SBC_INDIRECT_X
                 self.cycles_remaining = 5
@@ -791,7 +787,7 @@ struct CPU
                 value = self.memory[addr]
                 self.cycles_remaining -= 1
                 #Check for underflow, if so, set the carry bit to 1
-                self.reg_a = self.add_sub_and_update_status(value, true)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SBC_Y_INDIRECT
                 self.cycles_remaining = 5
@@ -802,7 +798,7 @@ struct CPU
                 value = self.memory[addr+self.reg_y]
                 self.cycles_remaining -= 2
                 #Check for underflow, if so, set the carry bit to 1
-                self.reg_a = self.add_sub_and_update_status(value, true)
+                self.reg_a = self.add_sub_and_update_status(self.reg_a, value, true)
                 self.cycles_remaining -= 1
             when Instructions::SEC
                 self.cycles_remaining = 1
@@ -815,7 +811,7 @@ struct CPU
                 adl = self.advance_next_ins().to_u16
                 value = self.memory[adl]
                 self.cycles_remaining -= 1
-                self.memory[adl] = value + 1
+                self.memory[adl] = self.add_sub_and_update_status(value, 1)
                 self.cycles_remaining -= 2 #two cause first we increment value then we store it back in zero page adl
             when Instructions::INC_ZERO_X
                 self.cycles_remaining = 5
@@ -824,7 +820,7 @@ struct CPU
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
                 self.cycles_remaining -= 1
-                self.memory[addr] = value + 1
+                self.memory[addr] = self.add_sub_and_update_status(value, 1)
                 self.cycles_remaining -= 2
             when Instructions::INC_ABS
                 self.cycles_remaining = 5
@@ -833,7 +829,7 @@ struct CPU
                 addr = adh | adl
                 value = self.memory[addr]
                 self.cycles_remaining -= 1
-                self.memory[addr] = value + 1
+                self.memory[addr] = self.add_sub_and_update_status(value, 1)
                 self.cycles_remaining -= 2
             when Instructions::INC_ABS_X
                 self.cycles_remaining = 6
@@ -844,7 +840,7 @@ struct CPU
                 self.cycles_remaining -= 1
                 value = self.memory[addr]
                 self.cycles_remaining -= 1
-                self.memory[addr] = value + 1
+                self.memory[addr] = self.add_sub_and_update_status(value, 1)
                 self.cycles_remaining -= 2
             when Instructions::INX
                 self.cycles_remaining = 1
@@ -857,14 +853,16 @@ struct CPU
             when Instructions::DEC_ZERO
                 self.cycles_remaining = 3
                 adl = self.advance_next_ins()
-                self.memory[adl] &-= 1
+                puts "ADL: #{adl}"
+                self.memory[adl] = self.add_sub_and_update_status(self.memory[adl], 1, true)
+                puts "self.memory[adl] = #{self.memory[adl]}"
                 self.cycles_remaining -= 2
             when Instructions::DEC_ZERO_X
                 self.cycles_remaining = 4
                 adl = self.advance_next_ins()
                 addr = adl + self.reg_x
                 self.cycles_remaining -= 1
-                self.memory[addr] -= 1
+                self.memory[addr] = self.add_sub_and_update_status(self.memory[addr], 1, true)
                 self.cycles_remaining -= 2
             when Instructions::DEC_ABS
                 self.cycles_remaining = 5
@@ -872,9 +870,8 @@ struct CPU
                 adh = self.advance_next_ins().to_u16 << 8
                 addr = adh | adl
                 value = self.memory[addr]
-                value -= 1
                 self.cycles_remaining -= 1
-                self.memory[addr] = value
+                self.memory[addr] = self.add_sub_and_update_status(value, 1, true)
                 self.cycles_remaining -= 1
             when Instructions::DEC_ABS_X
                 self.cycles_remaining = 5
@@ -882,17 +879,16 @@ struct CPU
                 adh = self.advance_next_ins().to_u16 << 8
                 addr = adh | adl
                 value = self.memory[addr + self.reg_x]
-                value -= 1
                 self.cycles_remaining -= 1
-                self.memory[addr + self.reg_x] = value
+                self.memory[addr + self.reg_x] = self.add_sub_and_update_status(value, 1, true)
                 self.cycles_remaining -= 1
             when Instructions::DEX
                 self.cycles_remaining = 1
-                self.reg_x &-= 1
+                self.reg_x = self.add_sub_and_update_status(self.reg_x, 1, true)
                 self.cycles_remaining -= 1
             when Instructions::DEY
                 self.cycles_remaining = 1
-                self.reg_y &-= 1
+                self.reg_y = self.add_sub_and_update_status(self.reg_y, 1, true)
                 self.cycles_remaining -= 1
             else
                 puts "Failed to decode instruction: #{ins.to_s(16)} @ #{self.program_counter.to_s(16)}"

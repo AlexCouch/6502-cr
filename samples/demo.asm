@@ -1,4 +1,7 @@
 * = $0200
-    lda #$50
-    adc #$50
-
+    lda #$ff
+    sta $5
+    inc $5
+    lda $5
+    dec $5
+    lda $5
